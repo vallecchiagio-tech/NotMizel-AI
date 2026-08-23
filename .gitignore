@@ -1,0 +1,14 @@
+# Node.js
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment Variables (Segreti)
+.env
+
+# Database e File Locali generati da NotMizel
+mobile_audit.db
+*.tsr
+ca_chain.pem

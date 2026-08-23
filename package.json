@@ -1,0 +1,12 @@
+{
+  "name": "notmizel-ai-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "cloudflare/*"
+  ],
+  "scripts": {
+    "build": "echo 'Building NotMizel-AI...'"
+  }
+}
