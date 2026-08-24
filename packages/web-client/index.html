@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotMizel-AI</title>
+    <script src="src/i18n.js" defer></script>
+</head>
+<body style="font-family: sans-serif; padding: 20px;">
+    
+    <!-- Selettore Lingua -->
+    <div style="text-align: right;">
+        <select id="lang-selector" onchange="setLanguage(this.value)">
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="en">🇬🇧 English</option>
+        </select>
+    </div>
+
+    <h1 id="app-title">NotMizel-AI Trust Suite</h1>
+    <p id="app-subtitle">Cifratura Zero-Knowledge & Notarizzazione</p>
+    
+    <div style="margin-top: 30px;">
+        <button id="btn-encrypt" style="padding: 10px 20px;">Cifra Documento</button>
+        <p id="jurisdiction-info" style="font-size: 0.9em; color: gray;"></p>
+    </div>
+
+</body>
+</html>
