@@ -1,118 +1,64 @@
-import os
-import io
-import json
-import hashlib
-from typing import Optional
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from pydantic import BaseModel
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-import piexif
-from pypdf import PdfReader, PdfWriter
-import uvicorn
+import os
+from dotenv import load_dotenv
+import base64
+from security import SecurityEngine
 
-app = FastAPI(
-    title="NotMizel-AI Core Engine & Trust Suite",
-    version="4.0.0",
-    description="Engine crittografico Zero-Knowledge con AES-256-GCM e Metadata Injection"
-)
+# Carica le variabili dal file .env (se esiste)
+load_dotenv()
 
-# --- UTILITIES CRITTOGRAFICHE ---
+app = FastAPI(title="NotMizel-AI Core Engine", version="1.1.0")
 
-def encrypt_aes256_gcm(data: bytes, key_hex: str) -> dict:
-    key = bytes.fromhex(key_hex)
-    if len(key) != 32:
-        raise ValueError("La chiave AES-256 deve essere di 64 caratteri esadecimali (32 byte).")
-    
-    aesgcm = AESGCM(key)
-    nonce = os.urandom(12)  # Nonce a 96-bit per GCM
-    ciphertext = aesgcm.encrypt(nonce, data, None)
-    
-    return {
-        "ciphertext_hex": ciphertext.hex(),
-        "nonce_hex": nonce.hex()
-    }
+class HealthCheck(BaseModel):
+    status: str
+    version: str
+    supabase_configured: bool
 
-def inject_image_metadata(image_bytes: bytes, author: str, license_type: str, copyright_notice: str) -> bytes:
-    try:
-        exif_dict = piexif.load(image_bytes)
-    except Exception:
-        exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "thumbnail": None}
-
-    # Iniezione campi EXIF Standard
-    user_comment = json.dumps({"author": author, "license": license_type, "copyright": copyright_notice})
-    exif_dict["0th"][piexif.ImageIFD.Artist] = author.encode('utf-8')
-    exif_dict["0th"][piexif.ImageIFD.Copyright] = copyright_notice.encode('utf-8')
-    exif_dict["Exif"][piexif.ExifIFD.UserComment] = user_comment.encode('utf-8')
-
-    exif_bytes = piexif.dump(exif_dict)
-    output = io.BytesIO()
-    piexif.insert(exif_bytes, image_bytes, output)
-    return output.getvalue()
-
-def inject_pdf_metadata(pdf_bytes: bytes, author: str, license_type: str, copyright_notice: str) -> bytes:
-    reader = PdfReader(io.BytesIO(pdf_bytes))
-    writer = PdfWriter()
-    writer.append(reader)
-    
-    metadata = {
-        "/Author": author,
-        "/License": license_type,
-        "/Copyright": copyright_notice,
-        "/Producer": "NotMizel-AI Digital Trust Suite"
-    }
-    writer.add_metadata(metadata)
-    
-    output = io.BytesIO()
-    writer.write(output)
-    return output.getvalue()
-
-# --- ENDPOINTS REST ---
-
-@app.get("/health")
+@app.get("/health", response_model=HealthCheck)
 async def health_check():
-    return {
-        "status": "online",
-        "engine": "NotMizel-AI Trust Core v4.0",
-        "features": ["AES-256-GCM", "EXIF/PDF Metadata Injection", "Zero-Knowledge"]
+    # Verifica se le chiavi Supabase sono state inserite nell'ambiente
+    has_supabase = bool(os.getenv("SUPABASE_URL"))
+    return {"status": "online", "version": "1.1.0", "supabase_configured": has_supabase}
+
+@app.post("/api/v1/process-and-hash")
+async def process_and_hash_file(
+    file: UploadFile = File(...),
+    author: str = Form(None),
+    copyright_notice: str = Form(None),
+    apply_encryption: bool = Form(False)
+):
+    """
+    Endpoint per uso LOCALE (Zero-Knowledge su Termux). 
+    Inietta metadati, calcola hash e (opzionalmente) cripta il file.
+    """
+    file_bytes = await file.read()
+    
+    # 1. Iniezione Metadati (Attualmente supportato per immagini)
+    if author and copyright_notice and file.filename.lower().endswith(('.jpg', '.jpeg', '.webp')):
+        file_bytes = SecurityEngine.inject_image_metadata(file_bytes, author, copyright_notice)
+
+    # 2. Hash del file originale (o metadatato)
+    original_hash = SecurityEngine.calculate_sha256(file_bytes)
+    
+    response_data = {
+        "filename": file.filename,
+        "original_sha256": original_hash,
+        "metadata_injected": bool(author and copyright_notice)
     }
 
-@app.post("/api/v1/trust/process")
-async def process_document(
-    file: UploadFile = File(...),
-    author: str = Form(...),
-    license_type: str = Form("All Rights Reserved"),
-    copyright_notice: str = Form(""),
-    encryption_key: Optional[str] = Form(None)  # 64 char HEX key se Zero-Knowledge è attivo
-):
-    try:
-        raw_bytes = await file.read()
-        filename = file.filename.lower()
-        processed_bytes = raw_bytes
+    # 3. Crittografia (Opzionale)
+    if apply_encryption:
+        key = SecurityEngine.generate_aes_key()
+        ciphertext, nonce = SecurityEngine.encrypt_file(file_bytes, key)
+        encrypted_hash = SecurityEngine.calculate_sha256(ciphertext)
+        
+        response_data.update({
+            "encrypted_sha256": encrypted_hash,
+            # ATTENZIONE: In produzione vera, la chiave NON viene restituita dall'API al client,
+            # ma viene generata e trattenuta nel browser. Questo serve per test locali.
+            "aes_key_base64": base64.b64encode(key).decode('utf-8'),
+            "nonce_base64": base64.b64encode(nonce).decode('utf-8')
+        })
 
-        # 1. Iniezione Metadati di Copyright
-        if filename.endswith(('.jpg', '.jpeg')):
-            processed_bytes = inject_image_metadata(raw_bytes, author, license_type, copyright_notice)
-        elif filename.endswith('.pdf'):
-            processed_bytes = inject_pdf_metadata(raw_bytes, author, license_type, copyright_notice)
-
-        # 2. Calcolo Hash SHA-256 dell'opera marcata
-        file_hash = hashlib.sha256(processed_bytes).hexdigest()
-
-        # 3. Cifratura Zero-Knowledge AES-256-GCM (opzionale)
-        encryption_result = None
-        if encryption_key:
-            encryption_result = encrypt_aes256_gcm(processed_bytes, encryption_key)
-
-        return {
-            "filename": file.filename,
-            "author": author,
-            "license": license_type,
-            "watermarked_file_hash": file_hash,
-            "is_encrypted": encryption_key is not None,
-            "encryption_data": encryption_result
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Errore di elaborazione: {str(e)}")
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    return response_data
