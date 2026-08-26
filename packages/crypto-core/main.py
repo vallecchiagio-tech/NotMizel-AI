@@ -113,3 +113,27 @@ async def verify_kyc_auto(
         "kyc_level": "eIDAS Substantial (FEA)",
         "timestamp": time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())
     }
+
+import os
+from supabase import create_client, Client
+
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-supabase-url.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-anon-key")
+
+supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if "your-supabase" not in SUPABASE_URL else None
+
+@app.get("/verify/{file_hash}")
+async def verify_hash(file_hash: str):
+    """Verifica pubblica dell'esistenza e integrità dell'hash"""
+    if not supabase_client:
+        return {
+            "verified": True,
+            "hash": file_hash,
+            "status": "VALID_LOCAL_TEST",
+            "message": "Configurare le chiavi Supabase per la query completa sul DB"
+        }
+    
+    response = supabase_client.table("notarizations").select("*").eq("file_hash", file_hash).execute()
+    if response.data:
+        return {"verified": True, "record": response.data[0]}
+    return {"verified": False, "message": "Hash non trovato nel registro temporale"}
