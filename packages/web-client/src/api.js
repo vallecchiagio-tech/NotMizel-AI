@@ -143,3 +143,39 @@ async function runAutoKYC() {
     };
     docInput.click();
 }
+
+async function verifyHashPublic() {
+    const hash = document.getElementById('verify-hash-input').value.trim();
+    const resultDiv = document.getElementById('verify-result');
+
+    if (!hash) {
+        alert("Inserisci un hash SHA-256 valido.");
+        return;
+    }
+
+    resultDiv.style.color = "#333";
+    resultDiv.innerText = "Interrogazione registro blockchain/DB in corso...";
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/verify/${hash}`);
+        const data = await res.json();
+
+        if (data.verified) {
+            resultDiv.style.color = "#16a34a";
+            resultDiv.innerText = `✅ CERTIFICATO VALIDO\nStato: ${data.status || 'Registrato'}\nMessaggio: ${data.message || 'Data certa verificata'}`;
+        } else {
+            resultDiv.style.color = "#dc2626";
+            resultDiv.innerText = `❌ HASH NON TROVATO: ${data.message}`;
+        }
+    } catch (err) {
+        resultDiv.style.color = "#dc2626";
+        resultDiv.innerText = "Errore durante la connessione al server di verifica.";
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const btnVerify = document.getElementById('btn-verify-hash');
+    if (btnVerify) {
+        btnVerify.addEventListener('click', verifyHashPublic);
+    }
+});
