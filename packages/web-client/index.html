@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotMizel-AI Trust Suite</title>
+    <title>NotMizel-AI | Mobile Notary & OS Suite</title>
     <link rel="manifest" href="manifest.json">
     <script>
       if ("serviceWorker" in navigator) {
@@ -13,59 +13,286 @@
     <script src="src/i18n.js" defer></script>
     <script src="src/api.js" defer></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f9f9f9; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        button { background: #0066cc; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 100px; }
-        button:hover { background: #0052a3; }
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; background: #e0f2fe; color: #0369a1; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --card-border: #1f2937;
+            --accent-purple: #6366f1;
+            --accent-blue: #3b82f6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --success-green: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .brand-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .badge-pro {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Stats Bar */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Main Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        /* Inputs and Buttons */
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0b0f19;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: var(--text-main);
+        }
+
+        /* Vault Table */
+        .vault-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            margin-top: 10px;
+        }
+
+        .vault-table th {
+            text-align: left;
+            color: var(--text-muted);
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .vault-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .badge-status {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
+
+<div class="container">
     
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span class="badge" id="kyc-badge" style="cursor:pointer;" onclick="runAutoKYC()">KYC: Clicca per Verificare</span>
-        <select id="lang-selector" onchange="setLanguage(this.value)" style="width: auto;">
-            <option value="it">🇮🇹 Italiano</option>
-            <option value="en">🇬🇧 English</option>
-        </select>
+    <!-- Header -->
+    <div class="header">
+        <div class="brand">
+            <div class="logo-icon">N</div>
+            <div>
+                <p class="brand-title">NotMizel<span style="color:var(--accent-purple);">-AI</span></p>
+                <p class="brand-subtitle">MOBILE NOTARY & OS SUITE</p>
+            </div>
+        </div>
+        <div class="badge-pro" id="kyc-badge" onclick="runAutoKYC()">PRO ACTIVE 👑</div>
     </div>
 
-    <h1 id="app-title" style="margin-bottom: 5px;">NotMizel-AI Trust Suite</h1>
-    <p id="app-subtitle" style="color: #666; margin-top: 0;">Digital Trust & Zero-Knowledge Suite</p>
+    <!-- Stats Bar -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Documenti</div>
+            <div class="stat-value" id="stat-docs">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Blockchain</div>
+            <div class="stat-value" style="color:var(--accent-purple);">eIDAS</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Crediti API</div>
+            <div class="stat-value" style="color:var(--success-green);">∞ Pro</div>
+        </div>
+    </div>
 
-    <!-- Sezione 1: Documenti Generici -->
+    <!-- Notarizzazione Istantanea -->
+    <div class="card" style="border: 1px dashed var(--accent-purple);">
+        <h3 class="card-title">📂 Notarizzazione Istantanea In-House</h3>
+        <p class="card-desc">Seleziona qualsiasi documento o codice sorgente. L'impronta SHA-256 verrà generata in locale in totale privacy.</p>
+        <button class="btn-primary" id="btn-encrypt">Seleziona File dal Dispositivo</button>
+    </div>
+
+    <!-- Deposito Musica & Copyright -->
     <div class="card">
-        <h3>📄 Notarizzazione Documenti & File</h3>
-        <button id="btn-encrypt">Carica e Cifra Documento</button>
-        <p id="jurisdiction-info" style="font-size: 0.85em; color: gray; text-align: center; margin-top: 10px;"></p>
+        <h3 class="card-title">🎵 Prova d'Autore & Musica</h3>
+        <p class="card-desc">Proteggi brani musicali, spartiti o testi con marcatura temporale e certificato WIPO.</p>
+        <input type="text" id="music-artist" placeholder="Nome Artista / Autore">
+        <input type="text" id="music-title" placeholder="Titolo dell'Opera / Brano">
+        <button class="btn-primary" id="btn-notarize-music">Deposita Opera Musicale</button>
     </div>
 
-    <!-- Sezione 2: Musica e Diritto d'Autore -->
+    <!-- Verifica Pubblica -->
     <div class="card">
-        <h3>🎵 Deposito Musica & Copyright</h3>
-        <p style="font-size: 0.85em; color: #555;">Proteggi brani, spartiti e testi con valore legale WIPO.</p>
-        <input type="text" id="music-artist" placeholder="Nome Artista / BANDA">
-        <input type="text" id="music-title" placeholder="Titolo del Brano">
-        <button id="btn-notarize-music" style="background: #10b981;">Deposita Brano Musicale</button>
+        <h3 class="card-title">🔍 Validazione Legale Hash / Certificato</h3>
+        <p class="card-desc">Verifica l'anteriorità e l'integrità di un file inserendo l'impronta SHA-256.</p>
+        <input type="text" id="verify-hash-input" placeholder="Incolla l'hash SHA-256 qui...">
+        <button class="btn-primary btn-secondary" id="btn-verify-hash">Verifica Registro</button>
+        <div id="verify-result" style="margin-top: 10px; font-size: 0.8rem; font-weight: 600;"></div>
     </div>
 
-    <!-- Sezione 3: Servizi Fisici & Apostille (Partner Affiliati) -->
-    <div class="card" style="border: 1px dashed #cbd5e1;">
-        <h3>🏛️ Cartaceo, Apostille & Legalizzazione</h3>
-        <p style="font-size: 0.85em; color: #666;">Hai bisogno del documento cartaceo bollato o dell'Apostille per l'estero?</p>
-        <button id="btn-request-paper" style="background: #475569;">Richiedi Servizio Notarile Cartaceo (€)</button>
+    <!-- Servizi Cartacei / Partner -->
+    <div class="card">
+        <h3 class="card-title">📜 Servizi Cartacei & Apostille</h3>
+        <p class="card-desc">Richiedi la legalizzazione cartacea o il riconoscimento video tramite studio notarile partner.</p>
+        <button class="btn-primary btn-secondary" id="btn-request-paper">Richiedi tramite Partner</button>
     </div>
+
+    <!-- Registro Certificati (Vault) -->
+    <div class="card">
+        <h3 class="card-title">Registro Certificati (Vault)</h3>
+        <table class="vault-table">
+            <thead>
+                <tr>
+                    <th>DOCUMENTO</th>
+                    <th>DATA</th>
+                    <th>VALIDAZIONE</th>
+                </tr>
+            </thead>
+            <tbody id="vault-body">
+                <tr>
+                    <td style="color:var(--text-muted);" colspan="3">Nessun documento locale registrato</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
 
 </body>
 </html>
-
-    <!-- Sezione 4: Modulo di Verifica Pubblica -->
-    <div class="card" style="border-top: 4px solid #10b981;">
-        <h3>🔍 Verifica Pubblica Certificato / Hash</h3>
-        <p style="font-size: 0.85em; color: #555;">Inserisci l'impronta SHA-256 per verificare l'anteriorità nel registro.</p>
-        <input type="text" id="verify-hash-input" placeholder="Incolla l'hash SHA-256 qui...">
-        <button id="btn-verify-hash" style="background: #059669;">Verifica Validità Legale</button>
-        <div id="verify-result" style="margin-top: 15px; font-size: 0.9em; font-weight: bold;"></div>
-    </div>
-
