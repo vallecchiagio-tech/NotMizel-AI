@@ -24,7 +24,7 @@
 <body>
     
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span class="badge" id="kyc-badge">KYC: Non Verificato</span>
+        <span class="badge" id="kyc-badge" style="cursor:pointer;" onclick="runAutoKYC()">KYC: Clicca per Verificare</span>
         <select id="lang-selector" onchange="setLanguage(this.value)" style="width: auto;">
             <option value="it">🇮🇹 Italiano</option>
             <option value="en">🇬🇧 English</option>
