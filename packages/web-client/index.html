@@ -3,25 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotMizel-AI</title>
+    <title>NotMizel-AI Trust Suite</title>
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js");
+      }
+    </script>
     <script src="src/i18n.js" defer></script>
+    <script src="src/api.js" defer></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f9f9f9; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        button { background: #0066cc; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 100px; }
+        button:hover { background: #0052a3; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; background: #e0f2fe; color: #0369a1; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+    </style>
 </head>
-<body style="font-family: sans-serif; padding: 20px;">
+<body>
     
-    <!-- Selettore Lingua -->
-    <div style="text-align: right;">
-        <select id="lang-selector" onchange="setLanguage(this.value)">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="badge" id="kyc-badge">KYC: Non Verificato</span>
+        <select id="lang-selector" onchange="setLanguage(this.value)" style="width: auto;">
             <option value="it">🇮🇹 Italiano</option>
             <option value="en">🇬🇧 English</option>
         </select>
     </div>
 
-    <h1 id="app-title">NotMizel-AI Trust Suite</h1>
-    <p id="app-subtitle">Cifratura Zero-Knowledge & Notarizzazione</p>
-    
-    <div style="margin-top: 30px;">
-        <button id="btn-encrypt" style="padding: 10px 20px;">Cifra Documento</button>
-        <p id="jurisdiction-info" style="font-size: 0.9em; color: gray;"></p>
+    <h1 id="app-title" style="margin-bottom: 5px;">NotMizel-AI Trust Suite</h1>
+    <p id="app-subtitle" style="color: #666; margin-top: 0;">Digital Trust & Zero-Knowledge Suite</p>
+
+    <!-- Sezione 1: Documenti Generici -->
+    <div class="card">
+        <h3>📄 Notarizzazione Documenti & File</h3>
+        <button id="btn-encrypt">Carica e Cifra Documento</button>
+        <p id="jurisdiction-info" style="font-size: 0.85em; color: gray; text-align: center; margin-top: 10px;"></p>
+    </div>
+
+    <!-- Sezione 2: Musica e Diritto d'Autore -->
+    <div class="card">
+        <h3>🎵 Deposito Musica & Copyright</h3>
+        <p style="font-size: 0.85em; color: #555;">Proteggi brani, spartiti e testi con valore legale WIPO.</p>
+        <input type="text" id="music-artist" placeholder="Nome Artista / BANDA">
+        <input type="text" id="music-title" placeholder="Titolo del Brano">
+        <button id="btn-notarize-music" style="background: #10b981;">Deposita Brano Musicale</button>
+    </div>
+
+    <!-- Sezione 3: Servizi Fisici & Apostille (Partner Affiliati) -->
+    <div class="card" style="border: 1px dashed #cbd5e1;">
+        <h3>🏛️ Cartaceo, Apostille & Legalizzazione</h3>
+        <p style="font-size: 0.85em; color: #666;">Hai bisogno del documento cartaceo bollato o dell'Apostille per l'estero?</p>
+        <button id="btn-request-paper" style="background: #475569;">Richiedi Servizio Notarile Cartaceo (€)</button>
     </div>
 
 </body>
