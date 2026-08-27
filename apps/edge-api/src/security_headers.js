@@ -1,0 +1,7 @@
+export const securityHeaders = {
+  "Content-Security-Policy": "default-src 'self'; script-src 'self'; object-src 'none';",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin"
+};

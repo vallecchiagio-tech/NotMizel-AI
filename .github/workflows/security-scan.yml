@@ -1,0 +1,15 @@
+name: Military-Grade Security Audit
+on: [push, pull_request]
+jobs:
+  sast_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Security Tools
+        run: pip install bandit
+      - name: Run Bandit SAST on Crypto Core
+        run: bandit -r packages/crypto-core/
