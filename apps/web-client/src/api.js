@@ -1,50 +1,45 @@
-// Configurazione API
-const API_URL = 'https://not.mizel-ai.com'; // Il tuo dominio Cloudflare
+const API_BASE_URL = 'https://notmizel-ai.onrender.com/api/v1';
 
-// Funzione per ottenere il token (da implementare con Supabase Auth)
-async function getToken() {
-    return localStorage.getItem('supabase_token');
-}
-
-// Funzione per login (da implementare con Supabase)
-async function login(email, password) {
-    // Esempio di chiamata a Supabase Auth
-    // const { user, session } = await supabase.auth.signInWithPassword({ email, password });
-    // localStorage.setItem('supabase_token', session.access_token);
-    console.log("Login non implementato ancora.");
-    return null;
-}
-
-// Funzione per logout
-function logout() {
-    localStorage.removeItem('supabase_token');
-}
-
-// Funzione per calcolare hash
-async function notarizeFile(file) {
-    const token = await getToken();
-    if (!token) throw new Error("Non loggato");
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await fetch(`${API_URL}/api/v1/process-and-hash`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-    });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Errore API");
+export class NotMizelAPI {
+    static getAuthHeader() {
+        const token = localStorage.getItem('supabase_token');
+        return token ? { 'Authorization': token } : {};
     }
 
-    return await response.json();
-}
+    static async notarizeHash(file) {
+        const formData = new FormData();
+        formData.append('file', file);
 
-// Esporta le funzioni
-window.NotMizelAPI = {
-    login,
-    logout,
-    notarizeFile
-};
+        const response = await fetch(`${API_BASE_URL}/notarize-hash`, {
+            method: 'POST',
+            headers: { ...this.getAuthHeader() },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Errore durante la notarizzazione hash');
+        }
+        return await response.json();
+    }
+
+    static async createAuthorProof(file, artistName, workTitle, region) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('artist_name', artistName);
+        formData.append('work_title', workTitle);
+        formData.append('region', region);
+
+        const response = await fetch(`${API_BASE_URL}/author-proof`, {
+            method: 'POST',
+            headers: { ...this.getAuthHeader() },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Errore generazione Prova d\'Autore');
+        }
+        return await response.json();
+    }
+}
