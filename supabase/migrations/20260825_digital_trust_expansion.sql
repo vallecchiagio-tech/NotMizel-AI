@@ -1,24 +1,35 @@
--- 1. AGGIUNTA DELLE NUOVE COLONNE (Idempotente: non dà errore se esistono già)
-ALTER TABLE public.notarizations ADD COLUMN IF NOT EXISTS jurisdiction_level TEXT DEFAULT 'national';
-ALTER TABLE public.notarizations ADD COLUMN IF NOT EXISTS country_code VARCHAR(3) DEFAULT 'ITA';
-ALTER TABLE public.notarizations ADD COLUMN IF NOT EXISTS metadata_embedded JSONB DEFAULT '{}'::jsonb;
-ALTER TABLE public.notarizations ADD COLUMN IF NOT EXISTS is_zero_knowledge BOOLEAN DEFAULT TRUE;
-ALTER TABLE public.notarizations ADD COLUMN IF NOT EXISTS blockchain_network TEXT;
-ALTER TABLE public.notarizations ADD COLUMN IF NOT EXISTS tsa_provider TEXT;
-ALTER TABLE public.notarizations ADD COLUMN IF NOT EXISTS encrypted_file_hash TEXT;
+-- Table for Notarizations
+CREATE TABLE IF NOT EXISTS public.notarized_documents (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID,
+    filename TEXT NOT NULL,
+    sha256_hash TEXT NOT NULL UNIQUE,
+    proof_id TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
--- 2. RIMOZIONE E RI-APPLICAZIONE DEI VINCOLI DI INTEGRITÀ (Zero Errori se rieseguito)
-ALTER TABLE public.notarizations DROP CONSTRAINT IF EXISTS chk_jurisdiction_level;
-ALTER TABLE public.notarizations ADD CONSTRAINT chk_jurisdiction_level 
-    CHECK (jurisdiction_level IN ('national', 'continental', 'international'));
+-- Table for Music Copyrights
+CREATE TABLE IF NOT EXISTS public.music_copyrights (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    artist_name TEXT NOT NULL,
+    work_title TEXT NOT NULL,
+    license_type TEXT NOT NULL,
+    file_hash TEXT NOT NULL,
+    certificate_id TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
-ALTER TABLE public.notarizations DROP CONSTRAINT IF EXISTS chk_blockchain_network;
-ALTER TABLE public.notarizations ADD CONSTRAINT chk_blockchain_network 
-    CHECK (blockchain_network IS NULL OR blockchain_network IN ('ethereum', 'bitcoin', 'polygon', 'private_chain'));
+-- Table for In-House KYC Vault Records
+CREATE TABLE IF NOT EXISTS public.kyc_records (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    full_name TEXT NOT NULL,
+    document_number TEXT NOT NULL,
+    identity_vault_hash TEXT NOT NULL UNIQUE,
+    status TEXT DEFAULT 'VERIFIED',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
--- 3. CREAZIONE DEGLI INDICI AVANZATI PER PERFORMANCE ESTREME
--- Indice GIN: Permette di cercare istantaneamente all'interno dei metadati JSON (es. cercare tutte le licenze "Creative Commons")
-CREATE INDEX IF NOT EXISTS idx_notarizations_metadata_gin ON public.notarizations USING gin (metadata_embedded);
-
--- Indice Composto: Velocizza le ricerche combinate come "Trovami le notarizzazioni in Europa (continental) fatte in Francia (FRA)"
-CREATE INDEX IF NOT EXISTS idx_notarizations_jurisdiction_country ON public.notarizations(jurisdiction_level, country_code);
+-- Enable Row Level Security
+ALTER TABLE public.notarized_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.music_copyrights ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kyc_records ENABLE ROW LEVEL SECURITY;
