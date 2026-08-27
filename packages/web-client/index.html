@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotMizel-AI | Mobile Notary & OS Suite</title>
+    <title>NotMizel-AI | Mobile Notary Suite</title>
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").then(reg => {
+            reg.update(); // Forza l'aggiornamento della cache PWA
+        });
+      }
+    </script>
+    <script src="src/api.js" defer></script>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -14,15 +23,7 @@
             --text-muted: #9ca3af;
             --success-green: #10b981;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            justify-content: center;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 16px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 500px; position: relative; }
         
         /* Header & Menu */
@@ -32,69 +33,33 @@
         .brand-title { font-weight: 700; font-size: 1.1rem; margin: 0; }
         .brand-subtitle { font-size: 0.7rem; color: var(--text-muted); margin: 0; }
         
-        .menu-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-main);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        /* Nav Menu Overlay (Nascosto di default) */
-        .side-menu {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 10px;
-            width: 200px;
-            z-index: 100;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .side-menu a {
-            display: block;
-            padding: 12px 16px;
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 0.85rem;
-            border-bottom: 1px solid var(--card-border);
-        }
-        .side-menu a:last-child { border-bottom: none; }
+        .menu-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+        .side-menu { display: none; position: absolute; top: 50px; right: 0; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; width: 200px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .side-menu a { display: block; padding: 12px 16px; color: var(--text-main); text-decoration: none; font-size: 0.85rem; border-bottom: 1px solid var(--card-border); }
         .side-menu a:hover { background: rgba(255,255,255,0.05); }
 
-        /* Stats & Cards */
+        /* Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 10px; text-align: center; }
         .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
         .stat-value { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
         
+        /* Cards & Inputs */
         .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
         .card-title { font-size: 0.95rem; font-weight: 600; margin-top: 0; margin-bottom: 6px; }
         .card-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4; }
         
         input, select { width: 100%; padding: 10px; background: #0b0f19; border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; box-sizing: border-box; margin-bottom: 10px; }
-        
         .btn-primary { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
         .btn-secondary { background: #1f2937; border: 1px solid #374151; color: var(--text-main); }
         
-        .legal-disclaimer {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            margin-top: 8px;
-            line-height: 1.3;
-            text-align: center;
-        }
+        .legal-disclaimer { font-size: 0.65rem; color: var(--text-muted); margin-top: 8px; line-height: 1.3; text-align: center; }
         .legal-disclaimer a { color: var(--accent-purple); text-decoration: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Header -->
     <div class="header">
         <div class="brand">
             <div class="logo-icon">N</div>
@@ -105,7 +70,6 @@
         </div>
         <button class="menu-btn" onclick="document.getElementById('nav-menu').style.display = document.getElementById('nav-menu').style.display === 'block' ? 'none' : 'block'">☰ Menu</button>
         
-        <!-- Menu a tendina -->
         <div id="nav-menu" class="side-menu">
             <a href="#">👤 Accedi / Registrati</a>
             <a href="#">💎 Abbonamenti (PRO)</a>
@@ -114,60 +78,53 @@
         </div>
     </div>
 
-    <!-- Stats Bar -->
     <div class="stats-grid">
-        <div class="stat-card" onclick="alert('Area Vault in sviluppo')">
+        <div class="stat-card">
             <div class="stat-label">Documenti</div>
-            <div class="stat-value">0</div>
+            <div class="stat-value" id="stat-docs">0</div>
         </div>
-        <div class="stat-card" onclick="alert('Monitor Nodi in sviluppo')">
+        <div class="stat-card">
             <div class="stat-label">Blockchain</div>
             <div class="stat-value" style="color:var(--accent-purple);">Standard</div>
         </div>
-        <div class="stat-card" onclick="alert('Pannello Sviluppatori API in sviluppo')">
+        <div class="stat-card">
             <div class="stat-label">Crediti API</div>
             <div class="stat-value" style="color:var(--text-muted);">Non attivi</div>
         </div>
     </div>
 
-    <!-- Notarizzazione Standard -->
+    <!-- Hashing Base (Con ID per Javascript) -->
     <div class="card" style="border: 1px solid var(--accent-purple);">
         <h3 class="card-title">📂 Notarizzazione Hashing (Standard)</h3>
-        <p class="card-desc">Seleziona un documento. Verrà generata la prova crittografica locale e applicato il sistema anti-scaricamento per immagini.</p>
-        <button class="btn-primary">Seleziona File dal Dispositivo</button>
+        <p class="card-desc">Seleziona un documento. Verrà generata la prova crittografica locale.</p>
+        <button class="btn-primary" id="btn-encrypt">Seleziona File dal Dispositivo</button>
         <p class="legal-disclaimer">
-            ⚠️ <b>Servizio Standard:</b> L'impronta generata costituisce una prova crittografica tecnica (RFC 3174), ma non possiede certificazione eIDAS o valore notarile legale completo. 
-            <a href="#">Scopri le opzioni di certificazione</a>.
+            ⚠️ <b>Servizio Standard:</b> L'impronta generata costituisce una prova crittografica (RFC 3174), ma non possiede certificazione eIDAS. <a href="#">Scopri le opzioni legali</a>.
         </p>
     </div>
 
-    <!-- Deposito Musica & Copyright (Aggiornato) -->
+    <!-- Deposito Musica (Con ID per Javascript) -->
     <div class="card">
         <h3 class="card-title">🎵 Prova d'Autore & Musica</h3>
-        <p class="card-desc">Carica il tuo brano, spartito o testo. Seleziona la giurisdizione per il rilascio del certificato digitale.</p>
-        <input type="file" accept="audio/*,.pdf,.txt" style="margin-bottom: 10px; background: transparent; padding: 0;">
-        <input type="text" placeholder="Nome Artista / Autore">
-        <input type="text" placeholder="Titolo dell'Opera / Brano">
-        <select>
+        <p class="card-desc">Carica il tuo brano, spartito o testo. Seleziona la giurisdizione per il certificato.</p>
+        <input type="text" id="music-artist" placeholder="Nome Artista / Autore">
+        <input type="text" id="music-title" placeholder="Titolo dell'Opera / Brano">
+        <select id="music-license">
             <option value="it">Nazionale (Italia / SIAE compatibile) - 2.50€</option>
             <option value="eu">Continentale (Validità Europea eIDAS) - 5.00€</option>
             <option value="int">Internazionale (WIPO / Conv. di Berna) - 9.90€</option>
         </select>
-        <button class="btn-primary" style="margin-top: 5px;">Richiedi Certificato d'Autore</button>
+        <button class="btn-primary" id="btn-notarize-music" style="margin-top: 5px;">Richiedi Certificato d'Autore</button>
     </div>
-
 </div>
 
 <script>
-    // Chiude il menu se si clicca fuori
+    // Logica chiusura menu
     window.onclick = function(event) {
         if (!event.target.matches('.menu-btn')) {
             var dropdowns = document.getElementsByClassName("side-menu");
             for (var i = 0; i < dropdowns.length; i++) {
-                var openDropdown = dropdowns[i];
-                if (openDropdown.style.display === 'block') {
-                    openDropdown.style.display = 'none';
-                }
+                if (dropdowns[i].style.display === 'block') dropdowns[i].style.display = 'none';
             }
         }
     }
