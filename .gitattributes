@@ -1,9 +1,10 @@
-# Escludi file statici e documentazione dal calcolo dei linguaggi
+# Escludi file di stile e markup dalle metriche dei linguaggi principali
 *.html linguist-detectable=false
-apps/web-client/styles/*.css linguist-documentation
-frontend/*.html linguist-documentation
+*.css linguist-documentation
+apps/landing/* linguist-documentation
 
-# Forza il tracciamento del codice sorgente reale
+# Evidenzia il codice enterprise reale
 packages/crypto-core/*.py linguist-detectable=true
 apps/web-client/src/*.js linguist-detectable=true
 supabase/migrations/*.sql linguist-detectable=true
+cloudflare/workers/*.js linguist-detectable=true
