@@ -1,0 +1,9 @@
+# Escludi file statici e documentazione dal calcolo dei linguaggi
+*.html linguist-detectable=false
+apps/web-client/styles/*.css linguist-documentation
+frontend/*.html linguist-documentation
+
+# Forza il tracciamento del codice sorgente reale
+packages/crypto-core/*.py linguist-detectable=true
+apps/web-client/src/*.js linguist-detectable=true
+supabase/migrations/*.sql linguist-detectable=true
