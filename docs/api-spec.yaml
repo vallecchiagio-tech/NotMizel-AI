@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: NotMizel-AI API
+  version: 1.2.0
+  description: Enterprise Mobile Notary & Trust Suite API
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /api/v1/process-and-hash:
+    post:
+      summary: Process and hash file (Free Tier)
+      # Altri dettagli verranno aggiunti in seguito

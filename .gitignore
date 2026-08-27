@@ -1,14 +1,22 @@
-# Node.js
-node_modules/
-
-# Python
+# Python / Backend
 __pycache__/
 *.pyc
-
-# Environment Variables (Segreti)
+*.pyo
 .env
+venv/
+.env.local
+requirements.txt.lock
+*.pyc
 
-# Database e File Locali generati da NotMizel
-mobile_audit.db
-*.tsr
-ca_chain.pem
+# Node.js / Frontend
+node_modules/
+.git
+.DS_Store
+
+# Database
+database/seeds/
+
+# Secrets
+*.pem
+*.key
+secrets.json
