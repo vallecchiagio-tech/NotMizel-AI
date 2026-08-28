@@ -185,7 +185,7 @@ NotMizel-AI/
 
 ## 📍 Current State & Roadmap (12 weeks)
 - [x] AI context file (GEMINI.md v3) created
-- [ ] Restructure repository to the target layout above
+- [x] Restructure repository to the target layout above
       (migrate useful code from apps/, delete legacy folders)
 - [ ] Week 1-2: PWA that hashes a file locally (SHA-256 via
       WebCrypto) and shows the hash to the user
