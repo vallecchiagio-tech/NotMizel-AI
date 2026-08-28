@@ -1,96 +1,87 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotMizel-AI | Mobile Notary Suite</title>
-    <meta name="theme-color" content="#0f172a">
-    <link rel="manifest" href="/manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/styles/main.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0f14">
+  <title>NotMizel-AI — Prova di esistenza verificabile</title>
+  <link rel="stylesheet" href="./src/styles/main.css">
 </head>
-<body class="p-4">
-    <div class="max-w-md mx-auto">
-        <header class="flex justify-between items-center mb-6">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold">N</div>
-                <h1 class="text-xl font-bold">NotMizel-AI</h1>
-            </div>
-            <button id="menu-btn" class="text-gray-400 hover:text-white">☰</button>
-        </header>
+<body>
 
-        <div class="grid grid-cols-3 gap-2 mb-6 text-center">
-            <div class="card p-2">
-                <div class="text-xs text-gray-400">Documenti</div>
-                <div class="text-lg font-bold" id="stat-docs">0</div>
-            </div>
-            <div class="card p-2">
-                <div class="text-xs text-gray-400">Blockchain</div>
-                <div class="text-lg font-bold text-indigo-400">Standard</div>
-            </div>
-            <div class="card p-2">
-                <div class="text-xs text-gray-400">Crediti API</div>
-                <div class="text-lg font-bold text-red-400">Inattivo</div>
-            </div>
-        </div>
+  <header class="topbar">
+    <span class="logo">Not<span class="accent">Mizel</span></span>
+    <span class="badge">100% in locale</span>
+  </header>
 
-        <div id="login-section" class="card text-center">
-            <h2 class="text-lg font-bold mb-2">Benvenuto</h2>
-            <p class="text-gray-400 mb-4">Accedi per utilizzare i servizi di notarizzazione.</p>
-            <button id="login-btn" class="btn">Login con Supabase</button>
-        </div>
+  <main>
+    <section class="hero">
+      <h1>Prova che un file <span class="accent">esisteva</span> prima.</h1>
+      <p>
+        L'hash SHA-256 del tuo file viene calcolato <strong>sul tuo
+        dispositivo</strong>. Il file non viene mai caricato da nessuna parte.
+      </p>
+    </section>
 
-        <div id="app-section" class="hidden">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-sm text-gray-400">Utente: <span id="user-email" class="text-white font-semibold"></span></span>
-                <span class="text-xs bg-indigo-900 text-indigo-200 px-2 py-1 rounded-full">Tier: <span id="user-tier">Free</span></span>
-            </div>
+    <section class="card" id="notarize-card">
+      <h2>Calcola la prova ora</h2>
 
-            <!-- Notarizzazione Hashing -->
-            <div class="card">
-                <div class="flex items-center space-x-2 mb-2">
-                    <span class="text-yellow-400">📁</span>
-                    <h3 class="font-bold">Notarizzazione Hashing (Standard)</h3>
-                </div>
-                <p class="text-xs text-gray-400 mb-4">Calcola l'impronta SHA-256 locale (Zero-Knowledge).</p>
-                
-                <input type="file" id="hash-file-input" class="hidden">
-                <button id="hash-trigger-btn" class="btn mb-2">Seleziona File dal Dispositivo</button>
-                <div id="hash-file-name" class="text-xs text-gray-500 mb-2 hidden">Nessun file selezionato</div>
-                
-                <button id="hash-btn" class="btn bg-green-600 hover:bg-green-700" disabled>Calcola Hash & Notarizza</button>
-                <div id="hash-result" class="result-box"></div>
-            </div>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="file-input" hidden>
+        <span class="dropzone-icon">📄</span>
+        <span class="dropzone-text">Scegli un file o una foto</span>
+        <span class="dropzone-hint">Documenti, immagini, qualsiasi formato</span>
+      </label>
 
-            <!-- Prova d'Autore -->
-            <div class="card">
-                <div class="flex items-center space-x-2 mb-2">
-                    <span class="text-purple-400">🎵</span>
-                    <h3 class="font-bold">Prova d'Autore & Musica</h3>
-                </div>
-                <p class="text-xs text-gray-400 mb-4">Carica brano o spartito, seleziona la regione legale.</p>
-                
-                <input type="file" id="author-file-input" class="hidden">
-                <button id="author-trigger-btn" class="btn mb-2" style="background-color: #8b5cf6;">Scegli File</button>
-                <div id="author-file-name" class="text-xs text-gray-500 mb-2 hidden">Nessun file selezionato</div>
-                
-                <input type="text" id="artist-name" placeholder="Nome Artista / Autore" class="w-full bg-slate-800 border border-slate-700 rounded p-2 mb-2 text-white text-sm">
-                <input type="text" id="work-title" placeholder="Titolo dell'Opera" class="w-full bg-slate-800 border border-slate-700 rounded p-2 mb-2 text-white text-sm">
-                
-                <select id="region-select" class="w-full bg-slate-800 border border-slate-700 rounded p-2 mb-4 text-white text-sm">
-                    <option value="Nazionale (Italia / SIAE) - Pay-Per-Use">Nazionale (Italia / SIAE)</option>
-                    <option value="Internazionale (WIPO)">Internazionale (WIPO)</option>
-                </select>
+      <div id="file-info" class="file-info hidden">
+        <p><strong id="file-name"></strong></p>
+        <p id="file-size" class="muted"></p>
+      </div>
 
-                <button id="author-btn" class="btn" style="background-color: #8b5cf6;" disabled>Richiedi Certificato d'Autore</button>
-                <div id="author-result" class="result-box"></div>
-            </div>
+      <div id="progress-wrap" class="progress-wrap hidden">
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <p id="progress-label" class="muted">Calcolo in corso…</p>
+      </div>
 
-            <button id="logout-btn" class="btn bg-red-600 hover:bg-red-700 mt-4">Logout</button>
-        </div>
-    </div>
+      <div id="result" class="result hidden">
+        <p class="result-label">SHA-256</p>
+        <code id="hash-output" class="hash-output"></code>
+        <p class="muted small">
+          Questo hash identifica il tuo file in modo univoco.
+          Condividilo insieme al file: chiunque potrà verificare
+          l'identità del file senza possederlo.
+        </p>
+      </div>
 
-    <!-- Script caricati come Moduli ES6 -->
-    <script type="module" src="/src/app.js"></script>
+      <p id="error" class="error hidden"></p>
+    </section>
+
+    <section class="card card-dim">
+      <h2>Come funziona</h2>
+      <ol class="steps">
+        <li>Il file viene letto <strong>nel tuo browser</strong> e trasformato in un'impronta SHA-256.</li>
+        <li>L'impronta verrà ancorata alla blockchain Bitcoin tramite OpenTimestamps — <em>in arrivo</em>.</li>
+        <li>Riceverai un certificato PDF con istruzioni di verifica indipendente — <em>in arrivo</em>.</li>
+      </ol>
+    </section>
+
+    <section class="card card-dim">
+      <h2>🔔 NotMizel Pro — in arrivo</h2>
+      <p>
+        Marca temporale <strong>eIDAS qualificata</strong> tramite provider
+        certificato, identità verificata e certificato PDF avanzato.
+      </p>
+      <p class="muted small">Lascia la tua email per essere avvisato (presto disponibile).</p>
+    </section>
+  </main>
+
+  <footer>
+    <p class="muted small">
+      NotMizel-AI — prova crittografica di esistenza (art. 20 CAD).
+      Non è una registrazione di copyright e non sostituisce consulenza legale.
+    </p>
+  </footer>
+
+  <script type="module" src="./src/app.js"></script>
 </body>
 </html>
