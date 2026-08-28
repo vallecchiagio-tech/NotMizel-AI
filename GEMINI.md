@@ -3,7 +3,7 @@
      anything in this file yourself. The AI will always give you
      ready-to-copy commands in Italian. -->
 
-# NotMizel-AI — Context & AI Directives
+# NotMizel-AI — Context & AI Directives (v3 — Simplified MVP)
 
 ## 👤 User Profile & Response Style (MOST IMPORTANT — READ FIRST)
 - The user is NOT a professional developer. They work exclusively from
@@ -12,11 +12,12 @@
 - ALWAYS respond in Italian, in simple language. Technical terms must
   be briefly explained the first time they appear.
 - ALWAYS state the FULL file path when creating or editing a file
-  (e.g., `packages/crypto-core/eidas_tsa.py`).
+  (e.g., `api/src/index.js`).
 - Work in SMALL increments: one file or one function per task.
-  Before writing code, explain in 2-4 sentences and WHY.
+  Before writing code, explain in 2-4 sentences WHAT you are going to
+  change and WHY.
 - After any change, give the EXACT copy-paste command(s) the user must
-  run to verify it (e.g., `pytest packages/crypto-core/tests/ -v`).
+  run to verify it, and tell them what output they should expect.
 - If a task requires modifying more than 3 files, STOP and present a
   plan first. Ask the user for approval before proceeding.
 - NEVER delete or rewrite existing code without explicitly warning the
@@ -32,91 +33,121 @@
   one verification, then evaluate the result together.
 
 ## 🎯 Project Mission
-NotMizel-AI is an Enterprise-grade Mobile Notary Suite designed for
-legal compliance and cryptographic security. The system provides
-secure digital notarization and timestamping of files using a
-Zero-Knowledge architecture. It is built as a Monorepo, developed and
-managed entirely from a Termux (Android) environment.
+NotMizel-AI is a free, open, verifiable proof-of-existence service:
+users prove that a file (documents, images, creative works) existed at
+a certain moment, without ever uploading the file itself. Only SHA-256
+hashes ever leave the device. Built as a Monorepo, developed entirely
+from Termux (Android), running on 100% free-tier infrastructure.
 
-## 🏛️ Architecture & Where It Runs (CRITICAL — DO NOT DEVIATE)
-- **`apps/edge-api` (Gateway & Auth):**
-  - Tech: Cloudflare Workers + Hono (JavaScript).
-  - Deployed to: **Cloudflare Workers**.
-  - Role: Global low-latency API gateway, rate limiting, routing,
-    Supabase JWT validation. Fails fast on invalid requests.
-- **`apps/web-client` (Zero-Knowledge Frontend):**
-  - Tech: Vanilla PWA (ES Modules only), WebCrypto API.
+## 💰 Product Positioning & Monetization (STRATEGIC CONTEXT)
+- FREE tier (launch product): proof-of-existence via OpenTimestamps,
+  targeted also at creators as cryptographic proof of anteriority for
+  images/works (probative value under art. 20 CAD, Italian law).
+- PDF CERTIFICATE (launch feature, FREE tier): after a successful
+  timestamp, generate a downloadable "Certificate of Existence" PDF
+  containing: file name, SHA-256 hash, submission date, OpenTimestamps
+  proof data, and step-by-step INDEPENDENT verification instructions
+  (so anyone can verify WITHOUT trusting our servers). Generate it
+  client-side in the PWA if possible (e.g., pdf-lib via ES module);
+  if not feasible client-side, generate in the Worker. Never include
+  file contents — only hashes and proof metadata.
+- PREMIUM tier (announced at launch, built ONLY after waitlist
+  validation): qualified eIDAS timestamp via QTSP API, verified
+  identity via certified KYC provider API (Persona/Veriff/SumSub),
+  premium PDF with qualified proof. One-time payments via Stripe
+  Payment Links.
+- WAITLIST: launch with a "Notify me when Pro is ready" waitlist
+  (Supabase table + public roadmap). Waitlist signups = market
+  validation BEFORE contracting any QTSP. NEVER homemade KYC.
+- HONEST MARKETING RULE: never overclaim legal value. Allowed wording:
+  "verifiable proof of existence" (free) / "qualified eIDAS timestamp"
+  (premium, only when actually live). NEVER claim "official copyright
+  registration" (it does not exist in Italy/UE) or "guaranteed legal
+  protection".
+
+## 🏛️ Architecture — ONLY 2 Components (DO NOT ADD MORE)
+- **`web/` (Zero-Knowledge PWA Frontend):**
+  - Tech: Vanilla JS PWA (ES Modules only), WebCrypto API.
   - Deployed to: **Cloudflare Pages** → https://not.mizel-ai.com
-  - Role: Performs document hashing (SHA-256) and encryption
-    *client-side*. Raw files MUST NEVER leave the user's device.
-- **`packages/crypto-core` (The Notary Engine):**
-  - Tech: Python 3.11 + FastAPI.
-  - Deployed to: **Render** (as a Web Service). NOT on Cloudflare
-    Workers — Workers cannot run FastAPI.
-  - Role: Secure, isolated proxy to external Qualified Trust Service
-    Providers (QTSP). Manages RFC 3161 timestamp requests and
-    cryptographic validations.
-- **`supabase/migrations` (Data Layer):**
-  - Tech: PostgreSQL + Supabase Auth.
-  - Role: Stores metadata and hashes only. Governed strictly by Row
-    Level Security (RLS) policies.
+  - Role: Computes SHA-256 hash of the file LOCALLY (WebCrypto).
+    The raw file MUST NEVER leave the user's device. Sends only the
+    hash to the API. Shows hash + timestamp history. Generates the
+    downloadable PDF Certificate (client-side, hash + proof only).
+  - NO Python, NO bundlers, NO build step, NO frameworks.
+- **`api/` (Cloudflare Worker Backend):**
+  - Tech: Cloudflare Workers + Hono (JavaScript). ONE backend only.
+  - Deployed to: **Cloudflare Workers** → https://api.mizel-ai.com
+  - Role: Core endpoints:
+    - `POST /stamp` — receives a hash, submits it to OpenTimestamps,
+      stores hash + pending proof in Supabase.
+    - `POST /verify` — receives hash + proof, verifies via
+      OpenTimestamps calendar/Bitcoin attestation.
+    - `GET /list` — returns the user's timestamp history.
+    - `POST /waitlist` — stores emails of interested Pro users.
+  - Validates Supabase JWTs. Rate-limited. No other services.
+
+## 🗄️ Data Layer (Supabase — PostgreSQL + Auth)
+- Tables: `stamps` (id, user_id, file_hash, ots_proof, status,
+  created_at) and `waitlist` (id, email, created_at).
+- Row Level Security (RLS) MANDATORY on every table. Deny by default.
+  Every migration creating a table MUST include its RLS policies in
+  the same file.
+- Migrations are APPEND-ONLY: never modify an applied migration,
+  only add new ones with ascending timestamp prefixes.
+- file_hash column: store only hashes. The database must physically
+  have NO column capable of holding file contents.
 
 ## 🌐 Deployment Map (Git-based: every push to main triggers deploy)
 | Component | Platform | URL |
 |---|---|---|
 | PWA frontend | Cloudflare Pages | https://not.mizel-ai.com |
-| Edge API | Cloudflare Workers | https://api.mizel-ai.com |
-| Notary engine | Render | (internal service URL) |
+| API backend | Cloudflare Workers | https://api.mizel-ai.com |
 | Auth & DB | Supabase | (project URL) |
-- Secrets live ONLY in platform dashboards (Cloudflare, Render,
-  Supabase) or `.env` (never committed). `.env.example` documents them.
+- Secrets live ONLY in platform dashboards (Cloudflare, Supabase) or
+  `.env` (never committed). `.env.example` documents them.
+- NO Render, NO Python backend, NO second server. If a task seems to
+  require one, STOP and propose a Workers-based solution instead.
 
-## ⚖️ Strict Legal & Security Rules (INVIOLABLE)
-1. **Zero-Knowledge Privacy (GDPR):** The backend only ever receives
-   cryptographic hashes or encrypted blobs. It must never process or
-   store plain-text user files.
-2. **External Trust (eIDAS):** NEVER generate cryptographic timestamps
-   locally or in-house. The system must always proxy to a certified
-   external QTSP/TSA using RFC 3161. For development/testing use
-   FreeTSA (https://freetsa.org); for production, a qualified QTSP
-   must be contracted.
-3. **No Client-Side Secrets:** Private keys, QTSP API tokens, or master
-   encryption keys must never appear in `apps/web-client`.
-4. **Append-Only Migrations:** Never modify an existing applied
-   migration file in `supabase/migrations`. Only add new ones with
-   ascending timestamp prefixes.
-5. **RLS Mandatory:** Every new Supabase table must have RLS enabled
-   with explicit policies. Deny by default. Every new migration that
-   creates a table MUST include its RLS policies in the same file.
-6. **No Secrets in Code:** Never hardcode API keys, tokens, or
-   passwords. Always read from environment variables.
+## ⚖️ Strict Privacy & Security Rules (INVIOLABLE)
+1. **Zero-Upload Principle:** the backend only ever receives SHA-256
+   hashes and OpenTimestamps proofs. It must never accept, process,
+   or store file contents. The API has no file-upload endpoint.
+2. **External Trust:** timestamps come from OpenTimestamps
+   (https://opentimestamps.org — free, Bitcoin-anchored, verifiable
+   by anyone forever). NEVER implement custom timestamping logic.
+3. **No Client-Side Secrets:** API tokens or service keys must never
+   appear in `web/`.
+4. **No Secrets in Code:** never hardcode keys or tokens. Always read
+   from environment variables / Workers secrets.
+5. **Payments & Identity (future):** use Stripe Payment Links; never
+   touch raw payment data. Identity verification only via certified
+   KYC provider API. Never act as a payment intermediary.
 
-## 🔑 Key Derivation Decision (documented — do not reopen without cause)
-- Current: PBKDF2-SHA256 with 600,000 iterations via native WebCrypto.
-  This is OWASP-compliant and requires no build step.
-- Backlog (post-MVP only): migrate to Argon2id via argon2-browser WASM
-  (recommended params: 64 MiB memory, t=3, p=1). Track in GitHub
-  Issues, do NOT implement during feature work.
+## 🔭 Future Extensions (tracked — do NOT build now)
+- eIDAS/RFC 3161 qualified timestamps via third-party QTSP API
+  (Aruba, InfoCert, DigiCert, GlobalSign) as PREMIUM feature, only
+  after waitlist validation. The Worker `api/` is the natural proxy.
+- Certified KYC provider API for "verified user" badge (never
+  homemade KYC — storing identity documents ourselves is an AML/GDPR
+  liability).
+- Client-side encryption of stored blobs, only if users request it.
 
 ## 🛠️ Coding Standards
-- **Python (`packages/crypto-core`):**
-  - Format/lint with `ruff`. After writing Python code, run:
-    `ruff check packages/crypto-core/`
-  - Tests with `pytest` in `packages/crypto-core/tests/`. New backend
-    features REQUIRE a test before being considered done.
-  - Type hints mandatory on all function signatures.
-- **JavaScript (`apps/web-client`, `apps/edge-api`):**
-  - Strictly ES modules. NO bundlers (no Webpack/Vite) — keep Termux
-    development agile.
+- **JavaScript (`web/`, `api/`):**
+  - Strictly ES modules. NO bundlers (no Webpack/Vite).
   - Use standard Web APIs (Fetch, WebCrypto, Service Worker).
   - Syntax check: `node --check <file.js>`.
   - Local testing: to test the PWA in the phone's browser, ALWAYS
     instruct the user to serve it over HTTP (ES Modules do not work
     from file://). Use:
-    `python -m http.server 8080 -d apps/web-client`
+    `python -m http.server 8080 -d web`
     then tell the user to open http://localhost:8080 in the browser.
-- **API Documentation:** Every endpoint must be documented in
-  `docs/api-spec.yaml` (OpenAPI 3.0) and covered by integration tests.
+- **PDF generation:** prefer client-side with a single ES module
+  (pdf-lib loaded via CDN as ES module is acceptable). If done in the
+  Worker, never log or persist anything beyond hash/proof metadata.
+- **Database:** SQL migrations in `supabase/migrations/`.
+- **API Documentation:** every endpoint documented in
+  `docs/api-spec.yaml` (OpenAPI 3.0).
 
 ## 📦 Git Discipline (the user's safety net)
 - The user is learning git. When a task is completed, ALWAYS provide
@@ -127,18 +158,48 @@ managed entirely from a Termux (Android) environment.
 - If a change went wrong, prefer fixing forward or `git revert` over
   manual file editing.
 
-## 📍 Current State & Roadmap
-- [x] Initial DB schema defined
-- [x] GEMINI.md / CLAUDE.md context file created
-- [ ] Implement RFC 3161 TSA proxy in `packages/crypto-core`
-      (start with FreeTSA: https://freetsa.org; verify with
-      `openssl ts -verify`)
-- [ ] Enforce RLS policies on ALL Supabase tables
-- [ ] Deploy Edge API on Cloudflare Workers
-- [ ] Deploy PWA on Cloudflare Pages (https://not.mizel-ai.com)
-- [ ] End-to-end flow test: hash → encrypt → timestamp → verify
-- [ ] Contract a qualified QTSP for production timestamps
-- [ ] (Backlog) Argon2id migration in web-client
+## 🗺️ Target Repository Structure (restructuring in progress)
+NotMizel-AI/
+├── web/                    # PWA frontend (Cloudflare Pages)
+│   ├── index.html
+│   ├── css/style.css
+│   ├── js/app.js           # hashing, UI logic
+│   ├── js/api.js           # API calls
+│   ├── js/pdf-certificate.js  # PDF certificate generation
+│   ├── js/webcrypto-core.js   # WebCrypto helpers
+│   ├── manifest.json
+│   └── sw.js
+├── api/                    # Cloudflare Worker backend
+│   ├── src/index.js
+│   └── wrangler.toml
+├── supabase/
+│   └── migrations/
+├── docs/
+│   └── api-spec.yaml
+├── .env.example
+├── .gitignore
+└── GEMINI.md
+- Legacy folders (apps/, packages/) are DEPRECATED: when a task
+  touches them, propose migrating the useful code to the new
+  structure and then deleting the old folder, with user approval.
+
+## 📍 Current State & Roadmap (12 weeks)
+- [x] AI context file (GEMINI.md v3) created
+- [ ] Restructure repository to the target layout above
+      (migrate useful code from apps/, delete legacy folders)
+- [ ] Week 1-2: PWA that hashes a file locally (SHA-256 via
+      WebCrypto) and shows the hash to the user
+- [ ] Week 3-4: Worker `POST /stamp` → OpenTimestamps submission +
+      Supabase storage (with RLS migration)
+- [ ] Week 5-6: Worker `POST /verify` → independent OTS verification
+- [ ] Week 7-8: Supabase Auth login + RLS + `GET /list` history
+- [ ] Week 8-9: PDF Certificate of Existence (client-side, download)
+- [ ] Week 9-10: PWA installable + offline (manifest.json, sw.js),
+      deploy to not.mizel-ai.com
+- [ ] Week 10-11: waitlist table + `POST /waitlist` + landing section
+- [ ] Week 11-12: end-to-end test (hash → stamp → upgrade → verify →
+      PDF), README, launch
+- [ ] (Future) eIDAS QTSP premium + KYC provider + Stripe
 
 ## 🔄 How to Work With This File
 - At the START of every session, read this file and run
