@@ -215,8 +215,8 @@ NotMizel-AI/
   `return { pkg: "workerd", subpath: "/package.json" };`
   Ri-applicare dopo ogni npm install. NON usare `wrangler dev` (workerd non gira su Android): solo deploy.
 
-## state/decision
-### [DATA] Task 1 COMPLETATO — Backend Edge operativo
+## state/decisions
+### [29/08/2026] Task 1 COMPLETATO — Backend Edge operativo
 - Worker `notmizel-api-edge` standalone su Cloudflare (NO più proxy Render)
 - Endpoint attivi: GET /health → {"status":"ok", version:"0.2.0"}
 - URL: https://api.mizel-ai.com (custom domain) + workers.dev
