@@ -214,3 +214,16 @@ NotMizel-AI/
   sostituire il `throw new Error("Unsupported platform...")` con
   `return { pkg: "workerd", subpath: "/package.json" };`
   Ri-applicare dopo ogni npm install. NON usare `wrangler dev` (workerd non gira su Android): solo deploy.
+
+## state/decision
+### [DATA] Task 1 COMPLETATO — Backend Edge operativo
+- Worker `notmizel-api-edge` standalone su Cloudflare (NO più proxy Render)
+- Endpoint attivi: GET /health → {"status":"ok", version:"0.2.0"}
+- URL: https://api.mizel-ai.com (custom domain) + workers.dev
+- Deploy: cd api && npx wrangler deploy (manuale da Termux)
+- GitHub Actions "deploy-worker" DISATTIVATO (punta a cartella inesistente)
+- Lezioni: (1) "Deploy successful" ≠ "il codice funziona": verificare SEMPRE
+  il contenuto del file deployato; (2) usare wrangler tail per verificare
+  il traffico; (3) mai git integration + deploy manuale non coordinati.
+- PROSSIMO: Task 2 — POST /stamp (OpenTimestamps)
+
