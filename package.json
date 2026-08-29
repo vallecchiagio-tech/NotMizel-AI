@@ -8,5 +8,8 @@
   ],
   "scripts": {
     "build": "echo 'Building NotMizel-AI...'"
+  },
+  "devDependencies": {
+    "wrangler": "^4.127.1"
   }
 }
