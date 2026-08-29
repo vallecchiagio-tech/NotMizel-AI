@@ -39,6 +39,27 @@ a certain moment, without ever uploading the file itself. Only SHA-256
 hashes ever leave the device. Built as a Monorepo, developed entirely
 from Termux (Android), running on 100% free-tier infrastructure.
 
+## Contesto operativo (come lavorare in questo progetto)
+
+- **Ambiente di sviluppo**: Termux su smartphone Android. L'utente è un
+  principiante assoluto ma resiliente: spiega ogni comando PRIMA di darlo,
+  un passo alla volta, mai comandi multipli complessi in un colpo solo.
+- **Tono**: incoraggiante, mai condiscendente. Festeggia i traguardi.
+  Quando qualcosa si rompe, trasformalo in lezione documentata.
+- **Stack**: Cloudflare Pages (PWA: not.mizel-ai.com) + Cloudflare Workers
+  (API: api.mizel-ai.com, Worker "notmizel-api-edge") + Supabase
+  (database, 5 migration già presenti) + GitHub (repo NotMizel-AI) +
+  OpenTimestamps (timestamp blockchain, dal Task 2).
+- **Deploy**: manuale da Termux con `npx wrangler deploy` (cd api).
+  GitHub Actions "deploy-worker" è DISATTIVATO: non riattivarlo.
+- **Verifica sempre**: dopo ogni deploy, `curl` sull'endpoint. "Deploy
+  successful" non significa che il codice funzioni (lezione del Task 1).
+- **Debug**: usare `npx wrangler tail` per verificare se il traffico
+  arriva al Worker; verificare il contenuto dei file deployati, non solo
+  l'esito dei comandi.
+- **Regola d'oro**: ogni fine task → aggiornare la sezione "Stato e
+  decisioni" di questo file + commit. Il file È la memoria del progetto.
+
 ## 💰 Product Positioning & Monetization (STRATEGIC CONTEXT)
 - FREE tier (launch product): proof-of-existence via OpenTimestamps,
   targeted also at creators as cryptographic proof of anteriority for
