@@ -208,3 +208,9 @@ NotMizel-AI/
   in the SAME commit.
 - If the user asks for something that violates a rule above, refuse
   politely, cite the rule, and propose the compliant alternative.
+
+## Note ambiente Termux
+- Wrangler funziona SOLO con patch a node_modules/workerd/lib/main.js:
+  sostituire il `throw new Error("Unsupported platform...")` con
+  `return { pkg: "workerd", subpath: "/package.json" };`
+  Ri-applicare dopo ogni npm install. NON usare `wrangler dev` (workerd non gira su Android): solo deploy.
