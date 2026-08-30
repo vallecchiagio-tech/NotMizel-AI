@@ -210,8 +210,8 @@ NotMizel-AI/
       (migrate useful code from apps/, delete legacy folders)
 - [x] Week 1-2: PWA that hashes a file locally (SHA-256 via
       WebCrypto) and shows the hash to the user
-- [ ] Week 3-4: Worker `POST /stamp` → OpenTimestamps submission +
-      Supabase storage (with RLS migration)
+- [x] Week 3: Worker+`POST /STAMP` → OpenTimestamps submission 
+- [ ] Week 4: Supabase storage (with RLS migration)
 - [ ] Week 5-6: Worker `POST /verify` → independent OTS verification
 - [ ] Week 7-8: Supabase Auth login + RLS + `GET /list` history
 - [ ] Week 8-9: PDF Certificate of Existence (client-side, download)
@@ -236,7 +236,7 @@ NotMizel-AI/
   `return { pkg: "workerd", subpath: "/package.json" };`
   Ri-applicare dopo ogni npm install. NON usare `wrangler dev` (workerd non gira su Android): solo deploy.
 
-## state/decisions
+## STATE/DECISIONS
 ### [29/08/2026] Task 1 COMPLETATO — Backend Edge operativo
 - Worker `notmizel-api-edge` standalone su Cloudflare (NO più proxy Render)
 - Endpoint attivi: GET /health → {"status":"ok", version:"0.2.0"}
@@ -248,12 +248,53 @@ NotMizel-AI/
   il traffico; (3) mai git integration + deploy manuale non coordinati.
 - PROSSIMO: Task 2 — POST /stamp (OpenTimestamps)
 
+### [30/08/2026] Task 2 COMPLETATO - opentimestamp + sha256 
+- **Stato progetto**: Task 2 COMPLETATO e chiuso.
+- **Live su Cloudflare**: Worker `notmizel-api-edge` -> api.mizel-ai.com
+  - GET /health (pubblico), POST /stamp (autenticato).
+- **Autenticazione**: header `X-NotMizel-API-Key`, secret Cloudflare
+  `NOTMIZEL_API_KEY` — RUOTATA a fine Task 2 (la vecchia è sovrascritta,
+  Cloudflare non conserva cronologia dei secrets).
+- **Verifica finale**: `ots info worker2.ots` riconosciuto dal client ufficiale,
+  attestato PendingAttestation su alice.btc.calendar -> ancoraggio Bitcoin entro
+  ~24h (poi `ots verify` = Success!).
+- **Decisioni tecniche prese**:
+  - File .ots composti direttamente nel Worker (zero dipendenze lato edge).
+  - Failover 3 pool OTS, timeout 15s per pool.
+  - Retry lato client (10s) per gestire 404 transitori dei calendari.
+- **Prossimo passo**: Task 3 (vedi roadmap).
+ - Endpoint POST /stamp LIVE su api.mizel-ai.com (Worker Cloudflare)
+ - Genera file .ots UFFICIALI verificabili col client OpenTimestamps
+ - Protocollo ricostruito: header 30B + major(01) + tag sha256(08) + digest(32B) + risposta pool
+ - Pool con failover: a.pool, b.pool, eternitywall
+ - Endpoint autenticato con X-NotMizel-API-Key (403 testato e funzionante)
+ - LEZIONE: i calendari OTS a volte rispondono 404 (rate-limit) -> retry con 10s di pausa
+ - TO-DO client app: rate-limit lato client 1 stamp/10s
+- **Prossimo step**: Task 3 (vedi roadmap) ATTENTENZIONE! account supabase gia attivo e connesso con githab controllare cartelle relative e file/codici che possono essere connessi! verificare progetto supabase e comprendere limpostazione attuale!
 
-## Task 2 COMPLETATO (data: 2026-08-30)
-- Endpoint POST /stamp LIVE su api.mizel-ai.com (Worker Cloudflare)
-- Genera file .ots UFFICIALI verificabili col client OpenTimestamps
-- Protocollo ricostruito: header 30B + major(01) + tag sha256(08) + digest(32B) + risposta pool
-- Pool con failover: a.pool, b.pool, eternitywall
-- Endpoint autenticato con X-NotMizel-API-Key (403 testato e funzionante)
-- LEZIONE: i calendari OTS a volte rispondono 404 (rate-limit) -> retry con 10s di pausa
-- TO-DO client app: rate-limit lato client 1 stamp/10s
+
+
+
+## 📝 LEZIONI APPRESE — Task 2 (OpenTimestamps)
+
+1. **Protocollo OTS ricostruito via ingegneria inversa**: un file .ots valido =
+   header magic 30 byte (`\x00OpenTimestamps\x00\x00Proof\x00\xbf\x89\xe2\xe8\x84\xe8\x92\x94`)
+   + MAJOR_VERSION (`01`) + tag OpSHA256 (`08`) + digest (32 byte) + risposta grezza del pool.
+   Verificato empiricamente col client Python ufficiale (confronto byte-per-byte con xxd).
+2. **API calendari OTS**: `POST <pool>/digest` con body = 32 byte binari del digest,
+   header `Accept: application/vnd.opentimestamps.v1`. Failover multi-pool
+   (a.pool, b.pool, eternitywall) perché a volte rispondono 404.
+3. **Rate-limit**: i pool a volte rifiutano (404) sotto richieste ravvicinate ->
+   retry lato client con pausa 10 secondi. Regola per l'app: max 1 stamp / 10s.
+4. **Debug empirico > ipotesi**: ogni fix è stato guidato da test (xxd, grep sul
+   sorgente ufficiale, confronto offset) mai da congetture. Metodo vincente.
+5. **Copiatura manuale = fonte di bug**: chiavi/hash ricopiati a mano hanno causato
+   403/400 falsi. Soluzione: script con valori hardcoded una volta sola (stamp.py)
+   e sempre verifica con wc -c. L'umano è controllore qualità, non fotocopiatrice 😄
+6. **Errori 403 con chiave corretta?** Ricontrollare SEMPRE carattere per carattere
+   la chiave prima di sospettare il server.
+
+
+## NOTE: - Considerare sempre (il progetto si sta sviluppando con cloudflare+supabase+github nei piani gratuiti)
+## NOTE: - impostare l'infrasteuttura, file e schemi, basandosi sul fattore possibile di poter far pagare servizi eccedenti, per non fare pagare i superamento dei limiti al fondatore!
+## NOTE: - Ricordare sempre di istruire e dare comandi dettagliati e quando si possibili velocizzati da eseguire all'umano   
