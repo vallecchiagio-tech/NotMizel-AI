@@ -248,3 +248,12 @@ NotMizel-AI/
   il traffico; (3) mai git integration + deploy manuale non coordinati.
 - PROSSIMO: Task 2 — POST /stamp (OpenTimestamps)
 
+
+## Task 2 COMPLETATO (data: 2026-08-30)
+- Endpoint POST /stamp LIVE su api.mizel-ai.com (Worker Cloudflare)
+- Genera file .ots UFFICIALI verificabili col client OpenTimestamps
+- Protocollo ricostruito: header 30B + major(01) + tag sha256(08) + digest(32B) + risposta pool
+- Pool con failover: a.pool, b.pool, eternitywall
+- Endpoint autenticato con X-NotMizel-API-Key (403 testato e funzionante)
+- LEZIONE: i calendari OTS a volte rispondono 404 (rate-limit) -> retry con 10s di pausa
+- TO-DO client app: rate-limit lato client 1 stamp/10s
