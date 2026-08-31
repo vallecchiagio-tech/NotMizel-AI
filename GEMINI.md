@@ -287,6 +287,19 @@ NotMizel-AI/
 - PROSSIMO: collegare Worker a Supabase (secrets su Cloudflare) e salvare
   le stampe in POST /stamp
 
+### [31/08/2026] Task 4 COMPLETATO — Worker -> Supabase persistenza
+- Secrets caricati su Cloudflare: SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+  (mai nel repo, verificati con wrangler secret list)
+- Worker v0.4.0: POST /stamp ora salva hash + ots_proof (base64) in tabella
+  stamps via REST Supabase. Campo "saved":true/false nella risposta.
+- Design: fallimento Supabase NON fa perdere il timestamp (client riceve
+  comunque il proof; errore loggato per wrangler tail). user_id NULL
+  finche' non arriva Auth (Week 7-8).
+- Test end-to-end PASSATO: script api/test-stamp.sh -> saved:true,
+  riga verificata presente in Table Editor (tabella stamps).
+- LEZIONE: righe curl lunghe con \" e $(...) = errori su tastiera Android
+  -> sempre script .sh con chiave letta da ~/.notmizel_key (mai in chat).
+- PROSSIMO: Task 5 — POST /verify (Week 5-6 roadmap).
 
 
 ## 📝 LEZIONI APPRESE — Task 2 (OpenTimestamps)
