@@ -211,7 +211,7 @@ NotMizel-AI/
 - [x] Week 1-2: PWA that hashes a file locally (SHA-256 via
       WebCrypto) and shows the hash to the user
 - [x] Week 3: Worker+`POST /STAMP` → OpenTimestamps submission 
-- [ ] Week 4: Supabase storage (with RLS migration)
+- [x] Week 4: Supabase storage (with RLS migration)
 - [ ] Week 5-6: Worker `POST /verify` → independent OTS verification
 - [ ] Week 7-8: Supabase Auth login + RLS + `GET /list` history
 - [ ] Week 8-9: PDF Certificate of Existence (client-side, download)
@@ -272,6 +272,20 @@ NotMizel-AI/
  - TO-DO client app: rate-limit lato client 1 stamp/10s
 - **Prossimo step**: Task 3 (vedi roadmap) ATTENTENZIONE! account supabase gia attivo e connesso con githab controllare cartelle relative e file/codici che possono essere connessi! verificare progetto supabase e comprendere limpostazione attuale!
 
+### [31/08/2026] Task 3 COMPLETATO — Supabase storage con RLS
+- Progetto Supabase esistente RIUSATO (era in pausa, riattivato con Restore)
+- Verificato: le 5 migrazioni vecchie (Enterprise/Trust Suite) NON erano mai
+  state applicate ("No migrations" nel dashboard) → rimosse dal repo
+  (recuperabili dalla cronologia git se serve)
+- Nuova migrazione: supabase/migrations/20260831_notmizel_schema.sql
+  - Tabelle: stamps (user_id, file_hash, ots_proof, status) + waitlist (email)
+  - RLS attivo deny-by-default su entrambe; waitlist senza policy (solo
+    service_role via Worker)
+- Applicata via SQL Editor dashboard (Success), verificata: 2 tabelle presenti
+- LEZIONE: le policy SQL non hanno "if not exists" → ri-eseguire uno script
+  già applicato dà errore 42710 "already exists" (non è un problema reale)
+- PROSSIMO: collegare Worker a Supabase (secrets su Cloudflare) e salvare
+  le stampe in POST /stamp
 
 
 
