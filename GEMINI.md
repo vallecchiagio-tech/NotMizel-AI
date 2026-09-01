@@ -371,3 +371,18 @@ NotMizel-AI/
 ## NOTE: - impostare l'infrasteuttura, file e schemi, basandosi sul fattore possibile di poter far pagare servizi eccedenti, per non fare pagare i superamento dei limiti al fondatore!
 ## NOTE: - Ricordare sempre di istruire e dare istruzioni/comandi dettagliati e quando si possibili velocizzati da eseguire all'umano   
 
+
+## Minitask pendenti
+- [ ] Email magic link via dominio proprio: creare account Resend (free 3000 email/mese), configurare DNS (SPF/DKIM) su Cloudflare per notmizel-ai.com, poi impostare SMTP custom in Supabase (Authentication → SMTP). Zero codice, solo configurazione. Motivo: email default Supabase hanno rate limit ~4/ora e rischi spam.
+- [ ] Valutare migrazione storage verso Cloudflare (D1/R2) solo se i dati superano ~400MB (limite pratico Supabase free 500MB).
+- [ ] Rinforzo sicurezza checkAuth (Task futuro): oggi la prima riga è `if (!env.NOTMIZEL_API_KEY) return null` = accesso libero se il secret non è configurato. Da cambiare in "deny by default" (ritornare 503/errore se il secret manca), MA attenzione: /verify e il flusso di verifica indipendente dipendono da checkAuth — testare bene dopo la modifica.
+
+## Metodo di lavoro (da applicare sempre, ogni chat)
+1. VERIFICARE PRIMA DI MODIFICARE: mai patchare alla cieca. Prima grep/sed per vedere le righe esatte con numeri, poi patch.
+2. Patch via python3 heredoc con ASSERT su ogni anchor: se il codice non combacia esattamente, il patch si ferma SENZA scrivere (AssertionError = comportamento corretto, non errore da ignorare).
+   Template: python3 - <<'PYEOF' ... s=open(p).read(); old='...'; assert old in s; s=s.replace(old,new); open(p,"w").write(s); print("PATCH OK") PYEOF
+3. DOPO ogni patch: node --check api/src/index.js (verifica sintassi locale) + sed -n 'X,Yp' per verifica visiva.
+4. MAI toccare codice che funziona: checkAuth è intoccabile (/verify e la verifica indipendente dipendono da essa). Modifiche puramente additive.
+5. Una modifica per volta, poi test. Comandi corti e semplici (i loop/heredoc complessi si rompono nell'incollaggio su tastiera Android).
+6. A fine task: commit E push (regola del progetto). Segreti mai mostrati nei comandi (solo nomi variabili con grep -o).
+7. Context chat limitato (~30 messaggi): annotare minitask e decisioni in fondo a GEMINI.md; prima di chiudere una chat, fare riassunto di handover.

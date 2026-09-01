@@ -42,7 +42,31 @@ function checkAuth(request, env) {
   return json({ error: "invalid or missing API key" }, key ? 403 : 401);
 }
 
-async function saveStamp(env, hash, otsBase64) {
+
+// Task 6: verify Supabase JWT (magic link). Returns { userId } or null.
+// Does NOT replace checkAuth (kept for API_KEY flow and /verify).
+async function getAuthUser(request, env) {
+  const h = request.headers.get("Authorization") || "";
+  if (!h.startsWith("Bearer ")) return null;
+  const token = h.slice(7).trim();
+  if (!token || !env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
+  try {
+    const res = await fetch(env.SUPABASE_URL + "/auth/v1/user", {
+      headers: {
+        "apikey": env.SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + token
+      }
+    });
+    if (!res.ok) return null;
+    const u = await res.json();
+    return u && u.id ? { userId: u.id } : null;
+  } catch (e) {
+    console.log("getAuthUser error: " + e.message);
+    return null;
+  }
+}
+
+async function saveStamp(env, hash, otsBase64, userId) {
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
     console.log("saveStamp skipped: Supabase secrets not configured.");
     return false;
@@ -90,7 +114,10 @@ async function handleStamp(request, env) {
   try {
     const result = await stampDigest(digestBytes, body.hash);
     const otsBase64 = btoa(String.fromCharCode.apply(null, result.ots));
-    const saved = await saveStamp(env, body.hash, otsBase64);
+    const user = await getAuthUser(request, env);
+  const userId = user ? user.userId : null;
+  console.log("handleStamp: auth mode = " + (userId ? "supabase-user" : "api-key/anon"));
+  const saved = await saveStamp(env, body.hash, otsBase64, userId);
     return json({
       ots: otsBase64,
       hash: body.hash,
@@ -157,7 +184,8 @@ async function handleVerify(request, env) {
     }
   }
   if (!att) {
-    return json({ hash: body.hash, status: "pending", checked_at: new Date().toISOString() });
+    return json({ hash: body.hash, ...(userId ? { user_id: userId } : {}),
+      status: "pending", checked_at: new Date().toISOString() });
   }
 
   // Verifica indipendente: header del blocco da blockstream.
