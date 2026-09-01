@@ -147,6 +147,38 @@ function b64ToBytes(b64) {
 // 2) attestation gia' nella prova (VarInt height) oppure upgrade calendar;
 // 3) conferma indipendente: header del blocco da blockstream.info,
 //    da cui ricaviamo block_hash E merkle_root (non fidati dal file).
+
+// Task 6: magic link via Supabase Auth. Body: { email }.
+async function handleMagicLink(request, env) {
+  try {
+    const body = await request.json();
+    const email = (body.email || "").trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      return json({ error: "email non valida" }, 400);
+    }
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+      return json({ error: "supabase auth non configurato" }, 503);
+    }
+    const res = await fetch(env.SUPABASE_URL + "/auth/v1/otp", {
+      method: "POST",
+      headers: {
+        "apikey": env.SUPABASE_ANON_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email: email, create_user: true })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.log("otp error: " + res.status + " " + t);
+      return json({ error: "invio magic link fallito" }, 502);
+    }
+    return json({ ok: true, message: "email inviata" });
+  } catch (e) {
+    console.log("handleMagicLink error: " + e.message);
+    return json({ error: "richiesta non valida" }, 400);
+  }
+}
+
 async function handleVerify(request, env) {
   const authError = checkAuth(request, env);
   if (authError) return authError;
@@ -229,7 +261,10 @@ export default {
     }
     if (request.method === "POST" && url.pathname === "/verify") {
       return handleVerify(request, env);
-    }
+  }
+  if (request.method === "POST" && url.pathname === "/auth/magic-link") {
+    return handleMagicLink(request, env);
+  }
     return json({ error: "not found" }, 404);
   }
 };
