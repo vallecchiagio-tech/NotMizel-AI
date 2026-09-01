@@ -212,7 +212,7 @@ NotMizel-AI/
       WebCrypto) and shows the hash to the user
 - [x] Week 3: Worker+`POST /STAMP` → OpenTimestamps submission 
 - [x] Week 4: Supabase storage (with RLS migration)
-- [ ] Week 5-6: Worker `POST /verify` → independent OTS verification
+- [x] Week 5-6: Worker `POST /verify` → independent OTS verification
 - [ ] Week 7-8: Supabase Auth login + RLS + `GET /list` history
 - [ ] Week 8-9: PDF Certificate of Existence (client-side, download)
 - [ ] Week 9-10: PWA installable + offline (manifest.json, sw.js),
@@ -248,6 +248,11 @@ NotMizel-AI/
   il traffico; (3) mai git integration + deploy manuale non coordinati.
 - PROSSIMO: Task 2 — POST /stamp (OpenTimestamps)
 
+- Task 5 COMPLETATO e verificato in produzione: l'endpoint /verify
+  restituisce {"status":"confirmed","block":964816} per verify-test.ots
+- Estrazione block height da .ots senza dipendenze nel Worker edge
+- Triplo match: ots info (lib ufficiale) + lib Python + Worker pro
+
 ### [30/08/2026] Task 2 COMPLETATO - opentimestamp + sha256 
 - **Stato progetto**: Task 2 COMPLETATO e chiuso.
 - **Live su Cloudflare**: Worker `notmizel-api-edge` -> api.mizel-ai.com
@@ -270,7 +275,7 @@ NotMizel-AI/
  - Endpoint autenticato con X-NotMizel-API-Key (403 testato e funzionante)
  - LEZIONE: i calendari OTS a volte rispondono 404 (rate-limit) -> retry con 10s di pausa
  - TO-DO client app: rate-limit lato client 1 stamp/10s
-- **Prossimo step**: Task 3 (vedi roadmap) ATTENTENZIONE! account supabase gia attivo e connesso con githab controllare cartelle relative e file/codici che possono essere connessi! verificare progetto supabase e comprendere limpostazione attuale!
+- **Prossimo step**: Task 3 (vedi roadmap)
 
 ### [31/08/2026] Task 3 COMPLETATO — Supabase storage con RLS
 - Progetto Supabase esistente RIUSATO (era in pausa, riattivato con Restore)
@@ -301,6 +306,30 @@ NotMizel-AI/
   -> sempre script .sh con chiave letta da ~/.notmizel_key (mai in chat).
 - PROSSIMO: Task 5 — POST /verify (Week 5-6 roadmap).
 
+## [31-08-2026] Task 5 COMPLETATO — verifica OTS con estrazione block height
+- Estrazione altezza Bitcoin da .ots senza dipendenze: firma a 9 byte
+  (0588960d73d7190103) + VarInt, criterio validato empiricamente su
+  verify-test.ots (unica occorrenza, ~2^-72 di falso positivo)
+- Storia: 0x05 solitario → falsi positivi; euristiche → falsi positivi;
+  lezione: SEMPRE validazione locale (node) prima del deploy
+- Triplo match finale: ots info + libreria Python + Worker prod → 964816
+- Lezione di metodo: ingegneria inversa un errore alla volta, ogni
+  fallimento deterministico ha ristretto lo spazio delle ipotesi
+- Task 5 COMPLETATO e verificato in produzione: l'endpoint /verify
+  restituisce {"status":"confirmed","block":964816} per verify-test.ots
+- Estrazione block height da .ots senza dipendenze nel Worker edge
+- Triplo match: ots info (lib ufficiale) + lib Python + Worker prod
+- D1: Scartato lo 0x05 solitario e le euristiche sui byte fissi
+  (falsi positivi: 2315, 215816). Adottata firma a 9 byte
+  (0588960d73d7190103) + VarInt, probabilità falso positivo ~2^-72
+- D2: Criterio validato EMPIRICAMENTE sui byte reali di verify-test.ots
+  (unica occorrenza @1226, varint @1235 = 964816) PRIMA del deploy
+- D3: Regola di metodo permanente: nessun deploy senza validazione
+  locale (node) che reproduca l'output atteso
+- D4: Ingegneria inversa del formato OTS un errore alla volta: ogni
+  errore deterministico ha ristretto lo spazio delle ipotesi
+- PROSSIMO: Task 6 (vedere roadmap Week 7-8)
+
 
 ## 📝 LEZIONI APPRESE — Task 2 (OpenTimestamps)
 
@@ -321,7 +350,24 @@ NotMizel-AI/
 6. **Errori 403 con chiave corretta?** Ricontrollare SEMPRE carattere per carattere
    la chiave prima di sospettare il server.
 
+## Lezioni apprwse Task 5 (ots senza dipendenze)
+1. **0x05 solitario = trappola**: byte troppo comune in hash casuali ->
+   falsi positivi (2315, 215816). Serve una firma lunga: 9 byte ~2^-72.
+2. **Le euristiche non bastano mai**: ogni fix "a muzzo" ne creava un
+   altro falso positivo. Solo il confronto con i byte REALI del file
+   (dump + rfind + varint) ha chiuso lo spazio delle ipotesi.
+3. **Gate di validazione locale**: mai deployare senza aver riprodotto
+   l'output atteso in node in locale. Questa volta: primo deploy
+   dopo fix = produzione corretta, zero rollback.
+4. **Ingegneria inversa per errori deterministici**: ogni parser che
+   falliva diceva QUALCOSA (tag shiftato, digest mangiato, fork non
+   ricorsivo). Gli errori erano la mappa, non il rumore.
+5. **Verifica indipendente**: la prova vive nella blockchain Bitcoin
+   via OpenTimestamps; il nostro Worker e' solo un verificador comodo.
+   Chiunque puo' riconfermare l'.ots con la lib ufficiale.
+
 
 ## NOTE: - Considerare sempre (il progetto si sta sviluppando con cloudflare+supabase+github nei piani gratuiti)
 ## NOTE: - impostare l'infrasteuttura, file e schemi, basandosi sul fattore possibile di poter far pagare servizi eccedenti, per non fare pagare i superamento dei limiti al fondatore!
-## NOTE: - Ricordare sempre di istruire e dare comandi dettagliati e quando si possibili velocizzati da eseguire all'umano   
+## NOTE: - Ricordare sempre di istruire e dare istruzioni/comandi dettagliati e quando si possibili velocizzati da eseguire all'umano   
+
