@@ -369,6 +369,17 @@ NotMizel-AI/
 - dopo Task 7 (Task 8):(vedere roadmap) PWA — cattura token dall'URL (#access_token=...), scambio
   sessione, pagina history che chiama GET /list; agg. Site URL/Redirect Supabase.
 
+## Task 7-8 decisions
+- SCOPERTA (Fase 1, 02/09/2026): web/src/api.js contiene fetch a
+  /notarize-hash e /author-proof — endpoint che NON esistono nel Worker
+  (router: /health, /stamp, /verify, /auth/magic-link, /list). api.js è
+  fuori sync. NESSUN client /list presente.
+  → Fase 3 Task 7-8: aggiungere getList(token) in api.js + decidere con
+    il fondatore se rimuovere/correggere gli endpoint fantasma.
+- web/index.html include gli script con <script type="module"
+  src="./src/app.js"> in fondo al body — pattern da replicare per
+  certificate.js.
+
 
 ## 📝 LEZIONI APPRESE — Task 2 (OpenTimestamps)
 
