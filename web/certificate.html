@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NotMizel-AI — Test ricevuta PDF (Fase 1)</title>
+  <style>
+    body { font-family: sans-serif; background:#0d0f14; color:#e8e8e8; padding:2rem; }
+    button { padding:0.8rem 1.5rem; font-size:1rem; cursor:pointer; }
+    #log { margin-top:1rem; color:#9f4df1; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Test ricevuta PDF — Fase 1</h1>
+  <p>Pagina standalone di test. NON è la PWA (Task 9).</p>
+  <button id="btn-test">Genera PDF di prova</button>
+  <div id="log"></div>
+  <script src="./src/pdf/pdf-lib.min.js"></script>
+  <script>
+    const log = (m) => { document.getElementById('log').textContent += m + '\n'; };
+    document.getElementById('btn-test').addEventListener('click', async () => {
+      try {
+        log('Creo documento...');
+        const pdf = await PDFLib.PDFDocument.create();
+        const font = await pdf.embedFont(PDFLib.StandardFonts.Helvetica);
+        const page = pdf.addPage([595, 842]);
+        page.drawText('NotMizel-AI — PDF engine OK (Fase 1)', {
+          x: 50, y: 750, size: 18, font,
+          color: PDFLib.rgb(0.62, 0.30, 0.95)
+        });
+        const bytes = await pdf.save();
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'test-fase1.pdf'; a.click();
+        URL.revokeObjectURL(url);
+        log('OK — PDF scaricato (' + bytes.length + ' byte)');
+      } catch (e) {
+        log('ERRORE: ' + e.message);
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>
