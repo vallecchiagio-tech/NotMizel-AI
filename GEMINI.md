@@ -213,7 +213,7 @@ NotMizel-AI/
 - [x] Week 3: Worker+`POST /STAMP` → OpenTimestamps submission 
 - [x] Week 4: Supabase storage (with RLS migration)
 - [x] Week 5-6: Worker `POST /verify` → independent OTS verification
-- [ ] Week 7-8: Supabase Auth login + RLS + `GET /list` history
+- [x] Week 7-8: Supabase Auth login + RLS + `GET /list` history
 - [ ] Week 8-9: PDF Certificate of Existence (client-side, download)
 - [ ] Week 9-10: PWA installable + offline (manifest.json, sw.js),
       deploy to not.mizel-ai.com
@@ -330,6 +330,45 @@ NotMizel-AI/
   errore deterministico ha ristretto lo spazio delle ipotesi
 - PROSSIMO: Task 6 (vedere roadmap Week 7-8)
 
+#### Task 6 — Completato ✅ (2026-01-09)
+- Endpoint: POST /auth/magic-link (api/src/index.js, handleMagicLink ~riga 152,
+  rotta a livello router dopo /verify). Body: {email} → Supabase OTP
+  (auth/v1/otp, create_user:true) → 200 {ok,message:"email inviata"}.
+  Errori gestiti: 400 email/JSON invalido, 503 secrets mancanti, 502 OTP fail
+  (con console.log dettaglio).
+- Secrets Cloudflare configurati e verificati: SUPABASE_URL (solo dominio),
+  SUPABASE_ANON_KEY. ⚠️ service_role MAI sul Worker.
+- Supabase: provider Email enabled; Site URL = http://localhost:8787 (TEMP —
+  aggiornare al deploy PWA); Redirect URLs: http://localhost:8787/**.
+- VERIFICATO END-TO-END: curl → {"ok":true} → email ricevuta → link cliccato →
+  utente presente in Authentication → Users (vallecchia.gio@gmail.com).
+  Atterraggio link su localhost:8787 = 404 atteso (Site URL temporaneo).
+- Git: commit f0efbad "Task 6: endpoint POST /auth/magic-link via Supabase OTP",
+  push su main. Log diagnostico ROUTER PATH rimosso prima del commit.
+- Deploy prod: Version ID post-fix e post-cleanup da verificare col prossimo
+  `npx wrangler deploy` ( cleanup log già commitato).
+- PROSSIMO (Task 7): PWA lato client — pagina che cattura token dall'URL
+  (?token=...&type=magiclink), scambio sessione via auth/v1/verify, storage
+  sessione, aggiornare Site URL/Redirect in Supabase al deploy PWA.
+- POST /auth/magic-link: body {email} → Supabase OTP (create_user:true) →
+  {"ok":true}. Errori: 400 invalid, 503 secrets mancanti, 502 OTP fail.
+- GET /list (handleList ~riga 182, rotta dopo magic-link): Authorization
+  Bearer → validato su auth/v1/user → GET rest/v1/stamps?user_id=eq.<id>
+  (select id,file_hash,ots_proof,status,created_at, order desc) → {stamps:[...]}.
+  401 token mancante/non valido, 502 lettura fallita.
+- Secrets: SUPABASE_URL (solo dominio!), SUPABASE_ANON_KEY. MAI service_role.
+- RLS verificata: tabelle stamps+waitlist con rowsecurity=true; policy su
+  stamps SELECT/INSERT con auth.uid()=user_id; waitlist deny-by-default.
+- TEST END-TO-END SUPERATO: senza token → 401; con token → 200 {"stamps":[]}
+  (riga test presente ma di altro user → RLS+filtro dimostrati).
+- Supabase: Site URL ancora localhost:8787 (temporaneo) → aggiornare al
+  deploy PWA. Magic link: 60 min, monouso.
+- Git: commit "Task 6: endpoint POST /auth/magic-link..." + "Task 6: endpoint
+  GET /list...". Ultimo Version ID: 443e5a65.
+- PROSSIMO: Task 7 (vedere roadmap (Week 8-9)
+- dopo Task 7 (Task 8):(vedere roadmap) PWA — cattura token dall'URL (#access_token=...), scambio
+  sessione, pagina history che chiama GET /list; agg. Site URL/Redirect Supabase.
+
 
 ## 📝 LEZIONI APPRESE — Task 2 (OpenTimestamps)
 
@@ -366,6 +405,46 @@ NotMizel-AI/
    via OpenTimestamps; il nostro Worker e' solo un verificador comodo.
    Chiunque puo' riconfermare l'.ots con la lib ufficiale.
 
+### Task 6 — Lezioni apprese (auth magic link, 2026-01-09)
+1. MAI pipingare `wrangler deploy` con `| tail`: l'output troncato nasconde
+   eventuali failure e il Version ID. Sempre output completo + confrontare
+   il Version ID nuovo col precedente (se identico = deploy non partito).
+2. `wrangler dev` NON funziona su Termux (workerd EACCES, già noto in
+   GEMINI.md): flusso di verifica = node --check → sed visivo → deploy →
+   `wrangler tail --format pretty` → curl.
+3. Anchor di patch: SEMPRE a riga singola. Gli anchor multilinea falliscono
+   per differenze di indentazione (2 assert ci hanno bloccato 2 volte = buon
+   assert!). MA: anche con anchor a riga singola la rotta è finita DENTRO il
+   blocco if precedente → node --check passa comunque (le graffe tornano) →
+   VERIFICARE SEMPRE la struttura con `sed -n` dopo la patch, non solo la sintassi.
+4. Log diagnostico temporaneo in cima al router (`ROUTER PATH: ...`) =
+   tecnica vincente: ha smascherato il bug di annidamento in 1 deploy.
+5. Config Supabase: SUPABASE_URL = SOLO il dominio (https://xxx.supabase.co),
+   mai con path (/rest/v1) → altrimenti PGRST125 "Invalid path" da PostgREST.
+   Test rapido endpoint auth: curl su /auth/v1/health → 200.
+6. Secrets: `wrangler secret put` sovrascrive in sicurezza, mai mostrati nei
+   log. Usare ANON KEY, MAI service_role key sul Worker edge.
+7. Un 404 "not found" custom + tail che mostra "Ok" = il tail non distingue
+   gli status; fidarsi solo del body della curl con -i.
+### Task 6 — Lezioni apprese parte 2 (GET /list + RLS, 2026-09-01)
+1. File migrazione su GitHub ≠ migrazione applicata: Supabase non sincronizza
+   da solo. "No migrations" in dashboard traccia solo CLI/CI, non i Run
+   manuali da SQL Editor. Verificare le tabelle con query su pg_tables.
+2. Fidarsi del DB reale, non della documentazione: GEMINI.md diceva "ots_uuid"
+   ma la colonna reale è "ots_proof". Sempre grep sul file SQL prima di scrivere query.
+3. CI deploy-worker.yml: paths "cloudflare/workers/**" = cartella inesistente →
+   la CI non scatta MAI. Deploy = SOLO manuale: npx wrangler deploy + verifica
+   Version ID diverso dal precedente.
+4. Magic link: valido ~60 min, monouso. Per catturare il token: tieni premuto
+   il link nell'email → "copia indirizzo" → token = stringa tra access_token= e &
+   (l'atterraggio su localhost:8787 dà 404: normale, Site URL temporaneo).
+5. Pattern di test perfetto: endpoint protetto testato DUE volte — senza token
+   (atteso 401) e con token (atteso 200). Lista vuota con riga presente in
+   tabella = PROVA che RLS + filtro user_id funzionano.
+6. JWT ispezionabile senza segreti: la parte centrale del token (tra i punti)
+   è base64 → sub (user_id), exp, email leggibili subito per il debug.
+
+
 
 ## NOTE: - Considerare sempre (il progetto si sta sviluppando con cloudflare+supabase+github nei piani gratuiti)
 ## NOTE: - impostare l'infrasteuttura, file e schemi, basandosi sul fattore possibile di poter far pagare servizi eccedenti, per non fare pagare i superamento dei limiti al fondatore!
@@ -375,7 +454,9 @@ NotMizel-AI/
 ## Minitask pendenti
 - [ ] Email magic link via dominio proprio: creare account Resend (free 3000 email/mese), configurare DNS (SPF/DKIM) su Cloudflare per notmizel-ai.com, poi impostare SMTP custom in Supabase (Authentication → SMTP). Zero codice, solo configurazione. Motivo: email default Supabase hanno rate limit ~4/ora e rischi spam.
 - [ ] Valutare migrazione storage verso Cloudflare (D1/R2) solo se i dati superano ~400MB (limite pratico Supabase free 500MB).
-- [ ] Rinforzo sicurezza checkAuth (Task futuro): oggi la prima riga è `if (!env.NOTMIZEL_API_KEY) return null` = accesso libero se il secret non è configurato. Da cambiare in "deny by default" (ritornare 503/errore se il secret manca), MA attenzione: /verify e il flusso di verifica indipendente dipendono da checkAuth — testare bene dopo la modifica.
+- [ ] Rinforzo sicurezza checkAuth (Task futuro): oggi la prima riga è `if (!env.NOTMIZEL_API_KEY) return null` = accesso libero se 
+      il secret non è configurato. Da cambiare in "deny by default" (ritornare 503/errore se il secret manca), MA attenzione: /verify 
+      e il flusso di verifica indipendente dipendono da checkAuth — testare bene dopo la modifica.
 
 ## Metodo di lavoro (da applicare sempre, ogni chat)
 1. VERIFICARE PRIMA DI MODIFICARE: mai patchare alla cieca. Prima grep/sed per vedere le righe esatte con numeri, poi patch.
