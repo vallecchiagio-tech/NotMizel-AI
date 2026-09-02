@@ -379,6 +379,21 @@ NotMizel-AI/
 - web/index.html include gli script con <script type="module"
   src="./src/app.js"> in fondo al body — pattern da replicare per
   certificate.js.
+## TASK 7 — PROGRESSO
+
+- Fase 1 COMPLETATA (02/09/2026): pdf-lib v1.17.1 vendorizzata in
+  web/src/pdf/pdf-lib.min.js (UMD, 525.099 byte, jsdelivr npm — verifica
+  integrità fatta: NOT "Not Found"). Test browser OK: certificate.html
+  genera e scarica PDF 895 byte con testo viola. Commit Fase 1.
+- NOTA TECNICA: pdf-lib UMD si usa come globale PDFLib.PDFDocument ecc.,
+  non come ES Module import. La variante .mjs NON esiste sul pacchetto
+  npm dist — non riprovare, non perdere tempo.
+- 404 innocui in test locale: /favicon.ico e /sw.js (il browser cerca un
+  service worker per via del manifest.json esistente — indizio utile per
+  il Task 9, dove sw.js sarà reale).
+- PROSSIMO: Fase 2 = buildCertificate(stamp) con dati FINTI in
+  web/src/certificate.js (ricevuta completa: file_hash, ots_proof,
+  created_at, status, nome file ricevuta-<primi12hash>.pdf) → commit.
 
 
 ## 📝 LEZIONI APPRESE — Task 2 (OpenTimestamps)
