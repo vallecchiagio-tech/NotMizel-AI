@@ -179,6 +179,28 @@ async function handleMagicLink(request, env) {
   }
 }
 
+async function handleList(request, env) {
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) return json({ error: "token mancante" }, 401);
+  const token = auth.slice(7);
+
+  const uRes = await fetch(env.SUPABASE_URL + "/auth/v1/user", {
+    headers: { "apikey": env.SUPABASE_ANON_KEY, "Authorization": "Bearer " + token }
+  });
+  if (!uRes.ok) return json({ error: "token non valido" }, 401);
+  const user = await uRes.json();
+
+  const qRes = await fetch(env.SUPABASE_URL +
+    "/rest/v1/stamps?user_id=eq." + user.id +
+    "&select=id,file_hash,ots_proof,status,created_at&order=created_at.desc", {
+    headers: { "apikey": env.SUPABASE_ANON_KEY, "Authorization": "Bearer " + token }
+  });
+  if (!qRes.ok) return json({ error: "lettura stamps fallita" }, 502);
+
+  const stamps = await qRes.json();
+  return json({ stamps: stamps });
+}
+
 async function handleVerify(request, env) {
   const authError = checkAuth(request, env);
   if (authError) return authError;
@@ -264,6 +286,9 @@ export default {
   }
   if (request.method === "POST" && url.pathname === "/auth/magic-link") {
     return handleMagicLink(request, env);
+  }
+  if (request.method === "GET" && url.pathname === "/list") {
+    return handleList(request, env);
   }
     return json({ error: "not found" }, 404);
   }
