@@ -443,20 +443,62 @@ NotMizel-AI/
    tabella = PROVA che RLS + filtro user_id funzionano.
 6. JWT ispezionabile senza segreti: la parte centrale del token (tra i punti)
    è base64 → sub (user_id), exp, email leggibili subito per il debug.
+7. i messaggi 'No such file or directory' di bash vanno letti per quello che sono: 
+   problema di percorso locale, non del servizio — distinguere sempre errori ambientali da 
+   errori di codice
 
-
-
-## NOTE: - Considerare sempre (il progetto si sta sviluppando con cloudflare+supabase+github nei piani gratuiti)
-## NOTE: - impostare l'infrasteuttura, file e schemi, basandosi sul fattore possibile di poter far pagare servizi eccedenti, per non fare pagare i superamento dei limiti al fondatore!
-## NOTE: - Ricordare sempre di istruire e dare istruzioni/comandi dettagliati e quando si possibili velocizzati da eseguire all'umano   
+## NOTE: - Considerare sempre (il progetto si sta sviluppando con cloudflare+supabase+github 
+          nei piani gratuiti)
+## NOTE: - impostare l'infrasteuttura, file e schemi, basandosi sul fattore possibile di poter 
+          far pagare servizi eccedenti, per non fare pagare i superamento dei limiti al fondatore!
+## NOTE: - Ricordare sempre di istruire e dare istruzioni/comandi dettagliati e 
+          quando si possibili velocizzati da eseguire all'umano   
 
 
 ## Minitask pendenti
 - [ ] Email magic link via dominio proprio: creare account Resend (free 3000 email/mese), configurare DNS (SPF/DKIM) su Cloudflare per notmizel-ai.com, poi impostare SMTP custom in Supabase (Authentication → SMTP). Zero codice, solo configurazione. Motivo: email default Supabase hanno rate limit ~4/ora e rischi spam.
 - [ ] Valutare migrazione storage verso Cloudflare (D1/R2) solo se i dati superano ~400MB (limite pratico Supabase free 500MB).
-- [ ] Rinforzo sicurezza checkAuth (Task futuro): oggi la prima riga è `if (!env.NOTMIZEL_API_KEY) return null` = accesso libero se 
+- [x] Rinforzo sicurezza checkAuth (Task futuro): oggi la prima riga è `if (!env.NOTMIZEL_API_KEY) return null` = accesso libero se 
       il secret non è configurato. Da cambiare in "deny by default" (ritornare 503/errore se il secret manca), MA attenzione: /verify 
       e il flusso di verifica indipendente dipendono da checkAuth — testare bene dopo la modifica.
+- [x] Minitask sicurezza auth (2026-09-02): checkAuth rinforzato —
+    !NOTMIZEL_API_KEY → 503 deny-by-default (stesso pattern delle guardie
+    Supabase Task 6). Tocca /stamp e /verify ma in prod il secret esiste:
+    ramo mai eseguito. Non-regressione verificata: scripts/test-stamp.sh →
+    ots ricevuta + saved:true. Version ID c20784c4.
+    (Nota: script sta in scripts/, non in root — find per localizzarlo.)
+## MINITASK / DECISIONI APERTI (Task 7-8, aggiornato)
+
+- [ ] Minitask CORS futuro: attualmente Access-Control-Allow-Origin: "*" in
+      api/src/index.js:10. Quando la PWA gira su https://not.mizel-ai.com
+      (Task 9), restringere l'origine a quel dominio. NON toccare ora.
+- [ ] Minitask storage version (failover) — preesistente, non bloccante.
+- [ ] Minitask rinforzo checkAuth su /verify — preesistente, non bloccante.
+- [ ] Aggiornare Site URL Supabase da http://localhost:8787 a
+      https://not.mizel-ai.com + redirect not.mizel-ai.com/** SOLO al
+      deploy PWA (Task 9). Redirect attuale: http://localhost:8787/**.
+
+## DECISIONI TASK 7-8 (confermate col fondatore)
+
+- Percorso PDF engine: web/src/pdf/ (NON web/public/pdf/ né web/js/ —
+  la struttura reale del repo vince sui documenti; docs e GEMINI.md
+  si aggiornano alla Fase 4).
+- Riuso web/src/api.js per chiamate /list: se manca il client /list,
+  si aggiunge IN api.js, non nella pagina di test.
+- Pagina di test web/certificate.html: token incollato a mano in memoria
+  (const TOKEN), MAI localStorage. Standalone, non è la PWA (Task 9).
+- CORS verificato in produzione (02/09/2026): OPTIONS /list → 204 con
+  Access-Control-Allow-Origin: *. NESSUNA modifica al Worker per Task 7-8.
+- PWA futura girerà su sottodominio: not.mizel-ai.com.
+- Errore PGRST125 su /auth/magic-link nei log: STORIA PASSATA, risolto
+  (SUPABASE_URL senza path). Non indagare.
+
+## COME LAVORIAMO (nuova regola)
+
+- Ogni decisione/minitask si annota SUBITO in GEMINI.md/docs durante la
+  sessione: si invia blocco da incollare + comandi + verifica + commit.
+  Motivo: la chat ha memoria limitata (~39 messaggi), il repo è la verità.
+
 
 ## Metodo di lavoro (da applicare sempre, ogni chat)
 1. VERIFICARE PRIMA DI MODIFICARE: mai patchare alla cieca. Prima grep/sed per vedere le righe esatte con numeri, poi patch.
