@@ -34,7 +34,7 @@ function isValidHash(hash) {
 }
 
 function checkAuth(request, env) {
-  if (!env.NOTMIZEL_API_KEY) return null;
+  if (!env.NOTMIZEL_API_KEY) return json({ error: "server non configurato" }, 503);
   const key = request.headers.get("X-NotMizel-API-Key");
   console.log("auth: received len=" + (key ? key.length : -1) +
               " secret len=" + env.NOTMIZEL_API_KEY.length);
