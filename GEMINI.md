@@ -562,3 +562,42 @@ NotMizel-AI/
 5. Una modifica per volta, poi test. Comandi corti e semplici (i loop/heredoc complessi si rompono nell'incollaggio su tastiera Android).
 6. A fine task: commit E push (regola del progetto). Segreti mai mostrati nei comandi (solo nomi variabili con grep -o).
 7. Context chat limitato (~30 messaggi): annotare minitask e decisioni in fondo a GEMINI.md; prima di chiudere una chat, fare riassunto di handover.
+
+## TASK 7 - FASE 3 COMPLETATA (2026-09-03)
+
+### Stato
+- Loop end-to-end NOTARIZZAZIONE funzionante e verificato sul vivo:
+  magic link -> JWT -> /stamp (Bearer + X-NotMizel-API-Key + hash
+  sha256) -> pool OpenTimestamps (a.pool.opentimestamps.org) ->
+  salvataggio Supabase CON user_id -> /list restituisce le righe
+  dell'utente (status "pending" = attesa conferma BTC, normale,
+  upgrade OTS richiede ore/giorni).
+- Deploy Worker: versione 542c2d21, URL notmizel-api-edge.vallecchia-
+  gio.workers.dev.
+
+### Decisioni
+- NOTMIZEL_API_KEY = chiave DI APPLICAZIONE (anti-abuso), non segreto
+  utente: valore scelto da noi (64 hex), vive in wrangler secret,
+  nel prodotto finale sara' nel codice frontend della PWA. Nessuna
+  dipendenza da file locali.
+- Script di test ~/fase3.sh creato con metodo @D@ + sed (il terminale
+  si mangia i caratteri $ anche negli echo tra apici singoli; @D@
+  convertito con sed 's/@D@/\x24/g'). Verificare SEMPRE con cat prima
+  di eseguire.
+
+### Lezioni apprese (Task 7)
+1. nano/paste su Termux unisce righe e perde i $: creare script con
+   echo '...' >> file (righe corte) + segnaposto @D@ + sed \x24.
+2. Ordine in uno script conta: definizioni variabili PRIMA dei curl.
+3. wrangler tail vuole il nome posizionale: npx wrangler tail
+   notmizel-api-edge (NON --name).
+4. wrangler deploy va eseguito da ~/NotMizel-AI/api (dove sta
+   wrangler.toml), non dalla root.
+5. Il log di debug nel Worker (auth: received len=X, secret len=Y) e'
+   stato decisivo: diagnostiche in 1 riga invece di tentativi a cieco.
+6. Quando un handler passa un parametro, verificare che la funzione
+   chiamata lo USI davvero: saveStamp riceveva userId ma non lo
+   scriveva nel body -> righe orfane, /list vuota. Fix: aggiunta
+   riga "user_id: userId," nel body del POST a Supabase.
+7. Il deploy mancante NON era il problema degli errori auth: server
+   vivo risponde comunque (401 = risposta del server).
