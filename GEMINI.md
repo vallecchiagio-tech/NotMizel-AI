@@ -215,6 +215,19 @@ NotMizel-AI/
 - [x] Week 5-6: Worker `POST /verify` → independent OTS verification
 - [x] Week 7-8: Supabase Auth login + RLS + `GET /list` history
 - [ ] Week 8-9: PDF Certificate of Existence (client-side, download)
+- [ ] Week 9: ## TASK 8 — AUTH AVANZATA + REGISTRO REALTIME (NUOVO, prima del Task 9)
+- Login email+password: Supabase auth nativo (attivare in dashboard),
+  nuovo endpoint Worker /auth/login → auth/v1/token?grant_type=password.
+  Magic link RESTA come alternativa (endpoint /auth/magic-link intatto).
+- "Accedi con Google": Supabase OAuth + Google Cloud Console (config).
+- Registro realtime: /list + polling lato client (~30-60s); Worker aggiorna
+  status pending→confirmed chiamando la verifica OTS sulle righe pending
+  (nuova funzione Worker); badge "Ancorato — Bitcoin block N." nel registro.
+- PDF ufficiale scaricabile dopo conferma (contiene block height).
+- Email transazionali: Resend piano free, mittente verify@mizel-ai.com
+  (creare indirizzo con Cloudflare Email Routing — solo ricezione).
+- Riferimenti decisioni prodotto: 6-10 in questo file.
+
 - [ ] Week 9-10: PWA installable + offline (manifest.json, sw.js),
       deploy to not.mizel-ai.com
 - [ ] Week 10-11: waitlist table + `POST /waitlist` + landing section

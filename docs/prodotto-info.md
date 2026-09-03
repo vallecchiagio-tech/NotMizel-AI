@@ -75,3 +75,38 @@ Il tuo file non viene mai caricato: viaggia solo l'impronta crittografica."
    cifrato — decidere in Task 9
 3. CSP rigorosa in web/ (stesso stile di api/src/security_headers.js)
 4. Nessun dato PII nel PDF oltre al necessario
+
+## RICEVUTA PDF UFFICIALE (Task 7-8) — REGOLE DEFINITIVE
+
+Il PDF è IL documento ufficiale della registrazione. UN SOLO PDF, mai due.
+- Contiene SEMPRE: hash SHA-256, data/ora registrazione, rete di ancoraggio
+  (Bitcoin via OpenTimestamps), sezione "Verifica e ancoraggio" con:
+  * "Questa registrazione è stata verificata dal sistema di verifica
+    indipendente NotMizel-AI."
+  * "L'ancoraggio alla rete Bitcoin avviene in modo sicuro e garantito
+    dalla rete stessa entro circa 24 ore dalla registrazione."
+  * "Nessun dato del file originale è mai stato trasmesso: solo
+    l'impronta crittografica."
+- Opzione: "Per ricevere via email il file di verifica originale (.ots),
+  richiedilo a verify@mizel-ai.com."
+- Se status=confirmed si aggiunge: "Ancoraggio completato — Bitcoin block
+  N. XXXXXX, verificato dal sistema NotMizel-AI."
+- VIETATO indirizzare a piattaforme esterne nel PDF (no opentimestamps.org,
+  no client esterni). La verifica indipendente è quella di NotMizel-AI.
+- Nome file: ricevuta-<primi12hash>.pdf. Download illimitato e gratuito.
+- Footer: proof of existence, non di proprietà; documento autosufficiente.
+
+## AUTH (Task 8.5) — PER LA PWA
+Login email+password + "Accedi con Google" (oltre a magic link). Il login
+è il primo schermo: sicurezza percepita e reale, professionalità.
+
+## REGISTRO (Task 8.5 + Task 9) — PER LA PWA
+Registro notarizzazioni con stato in tempo reale (polling ~30-60s):
+"⏳ Ancoraggio in corso" → "✅ Ancorato — Bitcoin block N." Il PDF
+ufficiale si scarica dal registro dopo la conferma.
+
+## MENÙ INFORMAZIONI (Task 9)
+Deve spiegare: cos'è la prova di esistenza, l'ancoraggio Bitcoin (~24h),
+la verifica indipendente NotMizel-AI. NON rimanda a servizi esterni.
+(Decisione pendente del fondatore: menzionare o no la verifica tecnica
+con client esterno per utenti esperti.)
