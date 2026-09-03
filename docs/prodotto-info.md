@@ -46,7 +46,7 @@ Illimitata e gratuita per sempre: la prova è tua."
   nessun vettore esterno)
 
 ## COME FUNZIONA L'ACCESSO (per la schermata info/login)
-"Niente password: inserisci la tua email, ti arriva un link magico
+" password: inserisci la tua email, ti arriva un link magico
 valido 60 minuti, lo apri e sei dentro. La sessione si rinnova da sola.
 Il tuo file non viene mai caricato: viaggia solo l'impronta crittografica."
 
@@ -58,7 +58,7 @@ Il tuo file non viene mai caricato: viaggia solo l'impronta crittografica."
 - Ricevuta OTS: autoportante, verificabile a vita indipendentemente
   da NotMizel (upgradabile: pending → confirmed con attestazione Bitcoin)
 - Infrastruttura: Cloudflare Workers (API, api.mizel-ai.com), Supabase
-  (auth+DB), Cloudflare Pages (PWA, notarize-ai.com — Task 9)
+  (auth+DB), Cloudflare Pages (PWA, not.mizel-ai.com — Task 9)
 
 ## PROSSIMI PASSI (roadmap breve, per "novità" futura in app)
 - Task 7-8: PDF ricevuta (client-side)
@@ -110,3 +110,17 @@ Deve spiegare: cos'è la prova di esistenza, l'ancoraggio Bitcoin (~24h),
 la verifica indipendente NotMizel-AI. NON rimanda a servizi esterni.
 (Decisione pendente del fondatore: menzionare o no la verifica tecnica
 con client esterno per utenti esperti.)
+## COSA VIENE NOTARIZZATO (spiegazione condivisa, per PWA/menù Informazioni)
+
+- Viene registrato SOLO l'hash SHA-256: impronta crittografica che comprime
+  TUTTO il contenuto del file. Il file stesso non lascia mai il dispositivo.
+- Equivalenza file↔hash: deterministica (stesso file = stesso hash, sempre)
+  e univoca in pratica. La prova si verifica RICALCOLANDO l'hash del file:
+  corrisponde a quello nel PDF/ots = è lo stesso file, matematicamente.
+- Se il contenuto cambia (anche conversione di formato) l'hash cambia del
+  tutto → la vecchia prova non copre il nuovo file (corretto: sono file
+  diversi). Rinotarizzare la forma finale. Rinominare/spostare NON cambia
+  l'hash (conta solo il contenuto).
+- Confermato flusso utente (fondatore): PDF pending scaricabile subito;
+  registro in app mostra realtime pending→confirmed (Task 8.5); PDF
+  riscaricabile dopo conferma con block number. Un solo modello documento.

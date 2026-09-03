@@ -82,6 +82,7 @@ async function saveStamp(env, hash, otsBase64, userId) {
       },
       body: JSON.stringify({
         file_hash: hash,
+			user_id: userId,
         ots_proof: otsBase64,
         status: "pending"
       })

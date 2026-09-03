@@ -486,6 +486,20 @@ NotMizel-AI/
    problema di percorso locale, non del servizio — distinguere sempre errori ambientali da 
    errori di codice
 
+- LEZIONE (Task 7, pattern ricorrente ×3): gli splice "chirurgici" su zone
+  di codice non visibili producono residui (stringhe senza ';', code di
+  statement vecchi attaccati). REGOLA DEFINITIVA: quando la zona da
+  sostituire confina con un'ancora unica e stabile (es. "const bytes"),
+  sostituire TUTTA la zona tra due confini, mai pezzi a mezzo indices.
+  Rituale obbligatorio per ogni patch: PATCH OK → node --check → sed -n
+  verifica visiva → solo dopo test browser.
+- Il footer del PDF è: "Proof of Existence — Timestamped on Bitcoin
+  Blockchain" (decisione fondatore: niente "non di proprietà" nel PDF;
+  differenze eIDAS/livello legale SOLO nel menù Informazioni, Task 9).
+- wrangler tail --format pretty funziona (log live del Worker) — usare
+  in Fase 3 per vedere le chiamate /list reali.
+
+
 ## NOTE: - Considerare sempre (il progetto si sta sviluppando con cloudflare+supabase+github 
           nei piani gratuiti)
 ## NOTE: - impostare l'infrasteuttura, file e schemi, basandosi sul fattore possibile di poter 
